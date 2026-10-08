@@ -1,0 +1,8 @@
+.env
+output/
+node_modules/
+.DS_Store
+.claude/settings.local.json
+ASSIGNMENT.md
+LOOM-SCRIPT.md
+SUBMISSION-EMAIL.md

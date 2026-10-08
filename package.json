@@ -1,0 +1,12 @@
+{
+  "name": "mysivi-ad-intelligence",
+  "version": "1.0.0",
+  "description": "Meta Ad Library teardown: Apify scrape, Gemini watches each video ad, deterministic scoring, PDF report. Runs in n8n or locally.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "teardown": "node runner/teardown.mjs",
+    "demo": "node runner/teardown.mjs --scrape-file demo/apify-sample-response.json --url \"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=IN&is_targeted_country=false&media_type=all&q=%22MySivi%22&search_type=keyword_exact_phrase&sort_data[direction]=desc&sort_data[mode]=total_impressions\" --brand MySivi --ads 3"
+  }
+}

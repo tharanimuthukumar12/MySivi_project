@@ -1,0 +1,559 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>MySivi — Ad Library Teardown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&family=Noto+Sans+Kannada&family=Noto+Sans+Malayalam&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&display=swap" rel="stylesheet"><style>
+@page{size:A4;margin:12mm 0}
+@page:first{margin:0}
+:root{--ink:#121417;--ink2:#33383F;--muted:#6B7280;--line:#E4E6EA;--soft:#F5F6F8;--accent:#E4572E;--accentSoft:#FBE9E3}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:'IBM Plex Sans','Noto Sans Tamil','Noto Sans Kannada','Noto Sans Devanagari','Noto Sans Telugu','Noto Sans Bengali','Noto Sans Malayalam',sans-serif;font-size:9.2pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:210mm;padding:0 15mm;page-break-after:always;break-after:page}
+.cover{height:297mm;padding:18mm 16mm;display:flex;flex-direction:column}
+.mono{font-family:'IBM Plex Mono',monospace}.muted{color:var(--muted)}.small{font-size:8.4pt}.strong{font-weight:600}
+.kicker{font:500 7.2pt 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5mm}
+.runhead{display:flex;justify-content:space-between;font:500 7pt 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:2mm 0 2.5mm;margin-bottom:7mm}
+h2{font-size:16pt;font-weight:600;letter-spacing:-.01em;margin:0 0 2mm;line-height:1.2}
+h3{font-size:10.5pt;font-weight:600;margin:0 0 1mm}
+.lede{color:var(--ink2);font-size:10pt;max-width:165mm;margin:0 0 6mm}
+.cv-top{display:flex;justify-content:space-between}
+.cv-mid{margin-top:46mm}
+.cv-brand{font-size:40pt;font-weight:600;letter-spacing:-.02em;line-height:1}
+.cv-title{font-size:17pt;font-weight:300;line-height:1.3;margin-top:6mm;max-width:160mm;color:var(--ink2)}
+.cv-thesis{margin-top:14mm;border-left:3px solid var(--accent);padding:1mm 0 1mm 5mm;max-width:150mm}
+.cv-thesis p{font-size:11pt;margin:1mm 0 0}
+.cv-stats{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin-top:auto;padding:5mm 0}
+.cv-stats b{display:block;font:500 20pt 'IBM Plex Mono',monospace}.cv-stats span{font-size:7.8pt;color:var(--muted)}
+.cv-foot{margin-top:6mm;display:grid;gap:1.5mm;font-size:8pt}
+.cv-foot div{display:grid;grid-template-columns:28mm 1fr}.src{word-break:break-all;font-size:7pt}
+.bullets{padding-left:4.5mm;margin:0 0 4mm}.bullets li{margin:0 0 1.6mm}.bullets.big li{font-size:10.2pt;margin-bottom:2.4mm}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin:4mm 0 6mm}
+.kpis.three{grid-template-columns:repeat(3,1fr)}
+.kpis div{padding:3.5mm 3mm 3.5mm 0}.kpis span{display:block;font-size:7.6pt;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpis b{display:block;font:500 17pt 'IBM Plex Mono',monospace;margin:1mm 0}.kpis em{font-style:normal;font-size:7.6pt;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:5mm}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;margin:4mm 0}
+.pgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.5mm}.pgrid .box p{font-size:7.8pt}.pgrid .ev-line{font-size:7pt}
+.box{border:1px solid var(--line);border-radius:2mm;padding:3.5mm 4mm;break-inside:avoid}
+.box-h{font-weight:600;font-size:8.6pt;margin-bottom:2mm;display:flex;gap:2mm;align-items:center}
+.kv{width:100%;border-collapse:collapse;font-size:8.2pt}.kv td{border-top:1px solid var(--line);padding:1.4mm 0;vertical-align:top}.kv td:first-child{color:var(--muted);width:42%}
+.tag{font:500 6.4pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;padding:.3mm 1.4mm;border-radius:1mm;vertical-align:1px}
+.tag-observed{background:#E8F1EC;color:#22603A}.tag-inferred{background:#F3EDE2;color:#7A5517}.tag-estimated{background:var(--accentSoft);color:#A53A18}
+.pill{display:inline-block;font-size:7.2pt;padding:.4mm 2mm;border-radius:3mm;background:var(--soft);color:var(--ink2);margin:0 1mm 1mm 0;white-space:nowrap}
+.pill.q1{background:var(--ink);color:#fff}.pill.q2{background:var(--accentSoft);color:#A53A18}.pill.q3{background:#ECEFF4;color:#334}.pill.q4{background:#fff;border:1px solid var(--line);color:var(--muted)}
+.pill.ghost{background:#fff;border:1px solid var(--line)}.pill.hot{background:var(--accent);color:#fff}
+.bar{display:inline-block;height:1.6mm;background:var(--soft);border-radius:1mm;overflow:hidden;width:100%}.bar i{display:block;height:100%;background:var(--accent)}
+.bar.thin{height:1.2mm}.bar.thin i{background:var(--ink)}
+.hbars .hb{display:grid;grid-template-columns:38% 1fr 6mm;gap:2mm;align-items:center;font-size:8pt;margin-bottom:1.3mm}
+.hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb-t{height:2.4mm;background:var(--soft);border-radius:1mm;overflow:hidden}.hb-t i{display:block;height:100%;background:var(--ink)}.hb-v{font-family:'IBM Plex Mono';text-align:right}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:1.5mm;margin-bottom:6mm}
+.step{border:1px solid var(--line);border-radius:1.5mm;padding:1.6mm 2.4mm;font-size:7.8pt;background:var(--soft)}.step span{color:var(--accent);margin-right:1.4mm;font-size:7pt}
+.arrow{color:var(--muted);font-size:8pt}
+.weights{width:100%;border-collapse:collapse;font-size:8.2pt}.weights td{padding:1.1mm 0}.weights td:first-child{width:46%}.weights td:nth-child(2){padding:0 3mm}.weights td:last-child{text-align:right;width:10mm}
+.formula{background:var(--ink);color:#fff;padding:3.5mm 4mm;border-radius:2mm;font-size:9pt;margin-bottom:5mm}
+.best{display:grid;grid-template-columns:58mm 1fr;gap:7mm;margin-bottom:5mm}
+.best-l{display:flex;flex-direction:column;gap:2mm}
+.thumb{background:var(--soft);border-radius:2mm;overflow:hidden;aspect-ratio:9/16;width:100%}.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb.tall{width:58mm}.thumb.mini{width:6mm;border-radius:1mm}.thumb.ph{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:7pt}
+.score-hero{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:3mm;margin-bottom:3mm}
+.score-hero b{display:block;font:500 34pt 'IBM Plex Mono',monospace;line-height:1;color:var(--accent)}.score-hero em{font-style:normal;font-size:8pt;color:var(--muted)}
+.score-hero .sub{display:flex;gap:5mm}.score-hero .sub span{display:block;font-size:7.4pt;color:var(--muted)}.score-hero .sub b{font-size:13pt;color:var(--ink)}
+.dims{display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm;margin-bottom:3mm}
+.dim{display:grid;grid-template-columns:24mm 1fr 5mm 7mm;gap:2mm;align-items:center;font-size:7.8pt}.dim b{font-family:'IBM Plex Mono';text-align:right}.dim em{font-style:normal;color:var(--muted);font-size:7pt;text-align:right}
+.field{margin-bottom:2.4mm}.field label{display:block;font:500 6.8pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 .8mm}
+.field p{margin:0 0 1.4mm}
+.quote{font-size:11pt;font-weight:500;border-left:2px solid var(--accent);padding-left:3mm}.quote.sm{font-size:9.2pt}
+.trans{color:var(--muted);font-style:italic;padding-left:3.5mm}
+.ev{list-style:none;padding:0;margin:0}.ev li{border-top:1px solid var(--line);padding:1.6mm 0;font-size:8.4pt}.ev li b{display:block}.ev li span{color:var(--ink2)}
+.ev-line{font:400 7.6pt 'IBM Plex Mono',monospace;color:var(--muted);margin:1mm 0 0}
+.board{width:100%;border-collapse:collapse;font-size:7.9pt}
+.board th{font:500 6.8pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;border-bottom:1px solid var(--ink);padding:1.4mm 1.6mm}
+.board td{border-bottom:1px solid var(--line);padding:1.2mm 1.6mm;vertical-align:top}.board .r{text-align:right}.board tr.win td{background:var(--accentSoft)}
+.board.compact td{padding:1.3mm 1.6mm}
+.scatter,.strip{width:100%;height:auto}
+.scatter .ax{stroke:var(--ink);stroke-width:.8}.scatter .med{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:.6}
+.scatter .dot{fill:#fff;stroke:var(--ink);stroke-width:1}.scatter .dot.win{fill:var(--accent);stroke:var(--accent)}
+.scatter .dl{font:500 6.5px 'IBM Plex Mono';text-anchor:middle;fill:var(--ink)}.ql{font:500 6.5px 'IBM Plex Sans';fill:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.at{font:400 6.5px 'IBM Plex Mono';fill:var(--muted)}
+.strip .grid{stroke:var(--line);stroke-width:.6}.strip .dur{stroke:#D5D8DD;stroke-width:2}.strip .prod{fill:var(--accent)}.strip .brand{fill:var(--ink)}
+.legend{display:flex;gap:4mm;font-size:7pt;color:var(--muted);margin-top:1mm}.lg{display:inline-block;width:2.4mm;height:2.4mm;margin-right:1mm;vertical-align:-1px}
+.lg.prod{background:var(--accent);border-radius:50%}.lg.brand{background:var(--ink)}.lg.dur{background:#D5D8DD;height:1mm;vertical-align:1px}
+.card{display:grid;grid-template-columns:24mm 1fr;gap:4.5mm;border-top:1px solid var(--ink);padding:3.5mm 0 2mm;break-inside:avoid}
+.card-l .thumb{width:24mm}.card-l .mono{font-size:6.2pt;margin-top:1mm}.card-h{display:flex;gap:3mm;align-items:baseline;margin-bottom:1.5mm}
+.chips{margin-bottom:2mm;font-size:7.8pt}.chips>span:not(.pill){margin-right:3.5mm}.chips b{font-family:'IBM Plex Mono'}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 6mm}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 4.5mm}.span2{grid-column:span 2}.span3{grid-column:span 3}
+.field.rec p{background:var(--soft);padding:1.6mm 2.4mm;border-radius:1.4mm}
+.card .field p{font-size:7.7pt;line-height:1.38}.card .field{margin-bottom:1.6mm}.card .quote.sm{font-size:8.6pt}
+.qtag{display:inline-block;font:500 6pt 'IBM Plex Sans';text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap}.qtag.q1{color:var(--ink)}.qtag.q2{color:#A53A18}
+.matrix{border-collapse:collapse;font-size:7.6pt;width:100%}
+.matrix th{height:19mm;vertical-align:bottom;padding:0}.matrix th span{display:inline-block;transform:rotate(-55deg);transform-origin:left bottom;white-space:nowrap;margin-left:2mm;font-weight:500;font-size:7pt;color:var(--ink2)}
+.matrix td{text-align:center;border-bottom:1px solid var(--line);padding:1mm}.matrix td:first-child{text-align:left;width:12mm}
+.matrix i{display:inline-block;width:2.6mm;height:2.6mm;border-radius:50%;border:1px solid var(--line)}.matrix i.on{background:var(--ink);border-color:var(--ink)}
+.matrix tr.tot td{border-top:1px solid var(--ink);font-weight:600}
+.gap{display:grid;grid-template-columns:12mm 1fr;gap:3mm;border-top:1px solid var(--line);padding:4mm 0;break-inside:avoid}
+.gap-n{font-size:16pt;color:var(--accent)}.opp{background:var(--accentSoft);padding:1.6mm 2.4mm;border-radius:1.4mm}
+.concept{border:1px solid var(--line);border-radius:2mm;padding:4mm 4.5mm;margin-bottom:5mm;break-inside:avoid}
+.concept-h{display:flex;flex-wrap:wrap;gap:2mm;align-items:baseline;margin-bottom:2.5mm}.concept-h h3{margin:0 2mm 0 0;font-size:11.5pt}
+.beats{padding-left:4mm;margin:0;font-size:8.2pt}.beats li{margin-bottom:.8mm}
+.recs td:first-child{width:34%}
+.disclaimer p{margin:0 0 2mm}
+</style></head>
+<body>
+<section class="page cover">
+  <div class="cv-top"><span class="kicker">Ad Library Teardown · Meta · IN</span><span class="mono muted">05 Oct 2026</span></div>
+  <div class="cv-mid">
+    <div class="cv-brand">MySivi</div>
+    <div class="cv-title">MySivi scales 917 active ads by pairing cinematic AI-generated skits with a low-friction ₹1 trial offer.</div>
+    <div class="cv-thesis"><div class="mono kicker">The one thing to know</div><p>10 ads, 10 different creatives, 3 captions. Score these ads on copy and most of them tie. So the workflow watched every video and judged the creative, not the caption.</p></div>
+  </div>
+  <div class="cv-stats">
+    <div><b>10</b><span>ads scored</span></div>
+    <div><b>917</b><span>active ads in library</span></div>
+    <div><b>10</b><span>unique creatives</span></div>
+    <div><b>3</b><span>unique captions</span></div>
+    <div><b>5</b><span>Facebook pages</span></div>
+  </div>
+  <div class="cv-foot">
+    <div><span class="muted">Source</span><span class="mono src">https://www.facebook.com/ads/library/?active_status=active&amp;ad_type=all&amp;country=IN&amp;is_targeted_country=false&amp;media_type=all&amp;q=%22MySivi%22&amp;s…</span></div>
+    <div><span class="muted">Sample</span><span>Top 10 active ads by Meta's impression sort · 0 duplicates removed</span></div>
+    <div><span class="muted">Pipeline</span><span>n8n · Apify · Gemini (video understanding) · deterministic scoring</span></div>
+    <div><span class="muted">Prepared by</span><span>Tharani M</span></div>
+  </div>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>01 Executive summary</span></div>
+  <div class="kicker">01 — Executive summary</div><h2>What the library is telling us</h2><p class="lede">MySivi scales 917 active ads by pairing cinematic AI-generated skits with a low-friction ₹1 trial offer.</p>
+  <ul class="bullets big"><li>917 active ads are currently live across five distinct Facebook pages</li><li>10 out of 10 sampled ads utilize Dynamic Creative to optimize delivery</li><li>8 out of 10 ads explicitly display the ₹1 price point on-screen</li><li>16 seconds is the median time for the first product UI appearance</li></ul>
+  <div class="kpis">
+    <div><span>Best ad</span><b>86.7</b><em>Ad Strength Index</em></div>
+    <div><span>Avg creative</span><b>72.6</b><em>of 100</em></div>
+    <div><span>Avg market signal</span><b>64.7</b><em>of 100</em></div>
+    <div><span>Product on screen</span><b>16s</b><em>median first reveal</em></div>
+    <div><span>Sound-off ready</span><b>90%</b><em>burned-in captions</em></div>
+  </div>
+  <div class="two">
+    <div class="box">
+      <div class="box-h">Portfolio, as observed</div>
+      <table class="kv">
+        <tr><td>Active ads reported</td><td>917</td></tr>
+        <tr><td>Pages running ads (sample)</td><td>MySivi Spoken English App<br>MySivi AI<br>MySivi - Best English Speaking App<br>MySivi AI - Practice English<br>MySivi AI - Learn English</td></tr>
+        <tr><td>Dynamic Creative share</td><td>10/10</td></tr>
+        <tr><td>Caption languages</td><td>Hinglish, Tamil, Kannada</td></tr>
+        <tr><td>Destinations</td><td>itunes.apple.com (3), play.google.com (7)</td></tr>
+        <tr><td>Placements</td><td>facebook, instagram, audience_network, messenger, threads</td></tr>
+        <tr><td>Template leaks</td><td>3 ads show raw <span class="mono">{{product.name}}</span> placeholders in the library</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <div class="box-h">How to read this report</div>
+      <p class="small"><span class="tag tag-observed">observed</span> seen, heard or scraped directly.<br><span class="tag tag-inferred">inferred</span> Gemini's judgement, always phrased as "likely".<br><span class="tag tag-estimated">estimated</span> a score computed in n8n from the two above.</p>
+      <p class="small">The ranking is estimated creative effectiveness from observable characteristics. It is not campaign performance — the Ad Library does not expose CTR, CPI or ROAS.</p>
+      <div class="box-h" style="margin-top:4mm">Where the ads land</div>
+      <div class="hbars">
+  <div class="hb"><span class="hb-l">Proven winner</span><span class="hb-t"><i style="width:30%"></i></span><span class="hb-v">3</span></div>
+  <div class="hb"><span class="hb-l">Retire</span><span class="hb-t"><i style="width:30%"></i></span><span class="hb-v">3</span></div>
+  <div class="hb"><span class="hb-l">Hidden gem</span><span class="hb-t"><i style="width:20%"></i></span><span class="hb-v">2</span></div>
+  <div class="hb"><span class="hb-l">Study this</span><span class="hb-t"><i style="width:20%"></i></span><span class="hb-v">2</span></div></div>
+    </div>
+  </div>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>02 Methodology</span></div>
+  <div class="kicker">02 — Methodology</div><h2>How the winner is picked</h2><p class="lede">Gemini describes and grades. n8n does the maths. The same inputs always give the same ranking.</p>
+  <div class="flow"><div class="step"><span class="mono">01</span>Ad Library URL</div><div class="arrow">→</div><div class="step"><span class="mono">02</span>Apify scrape</div><div class="arrow">→</div><div class="step"><span class="mono">03</span>Normalize · dedupe · fingerprint</div><div class="arrow">→</div><div class="step"><span class="mono">04</span>Gemini watches each video</div><div class="arrow">→</div><div class="step"><span class="mono">05</span>Validate / repair JSON</div><div class="arrow">→</div><div class="step"><span class="mono">06</span>Score in code</div><div class="arrow">→</div><div class="step"><span class="mono">07</span>Rank + quadrant</div><div class="arrow">→</div><div class="step"><span class="mono">08</span>Strategist memo</div><div class="arrow">→</div><div class="step"><span class="mono">09</span>PDF</div></div>
+  <div class="two">
+    <div class="box">
+      <div class="box-h">Creative Score · 0–100 <span class="tag tag-estimated">estimated</span></div>
+      <table class="weights"><tr><td>Hook</td><td><span class="bar thin"><i style="width:100%"></i></span></td><td class="mono">20%</td></tr><tr><td>Clarity</td><td><span class="bar thin"><i style="width:75%"></i></span></td><td class="mono">15%</td></tr><tr><td>Value prop</td><td><span class="bar thin"><i style="width:75%"></i></span></td><td class="mono">15%</td></tr><tr><td>Offer</td><td><span class="bar thin"><i style="width:75%"></i></span></td><td class="mono">15%</td></tr><tr><td>CTA</td><td><span class="bar thin"><i style="width:50%"></i></span></td><td class="mono">10%</td></tr><tr><td>Specificity</td><td><span class="bar thin"><i style="width:50%"></i></span></td><td class="mono">10%</td></tr><tr><td>Creative angle</td><td><span class="bar thin"><i style="width:50%"></i></span></td><td class="mono">10%</td></tr><tr><td>Conversion intent</td><td><span class="bar thin"><i style="width:25%"></i></span></td><td class="mono">5%</td></tr></table>
+      <p class="small muted">Each dimension is a 0–10 grade from Gemini against a written rubric with anchors. Weighted sum × 10. Missing grades are imputed at 5 and flagged.</p>
+    </div>
+    <div class="box">
+      <div class="box-h">Market Signal · 0–100 <span class="tag tag-observed">observed</span></div>
+      <table class="weights">
+        <tr><td>Impression rank in sample</td><td><span class="bar thin"><i style="width:83.33333333333334%"></i></span></td><td class="mono">50%</td></tr>
+        <tr><td>Longevity (full at 30 days)</td><td><span class="bar thin"><i style="width:50%"></i></span></td><td class="mono">30%</td></tr>
+        <tr><td>Distribution (placements + clones)</td><td><span class="bar thin"><i style="width:33.33333333333333%"></i></span></td><td class="mono">20%</td></tr>
+      </table>
+      <p class="small muted">Advertisers kill ads that lose money. An ad Meta ranks high on impressions, that has survived for weeks, or that has been re-uploaded as a clone is a revealed preference — the closest public proxy to "this one works". </p>
+    </div>
+  </div>
+  <div class="formula mono">Ad Strength Index = 0.7 × Creative Score + 0.3 × Market Signal</div>
+  <div class="two">
+    <div class="box"><div class="box-h">Quadrants</div><p class="small"><b>Proven winner</b> — above median on both. <b>Hidden gem</b> — strong creative the market hasn't backed yet: give it budget. <b>Study this</b> — the market likes it more than the rubric does: find what the rubric misses. <b>Retire</b> — below median on both.</p></div>
+    <div class="box"><div class="box-h">Sampling & cleaning</div><p class="small">15 rows scraped, 0 exact duplicates removed (same ad id or identical video assets), top 10 kept in Meta's order. Video asset ids and durations were decoded from the CDN urls to separate ads that share a caption. 10 × watched video.</p></div>
+  </div>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>03 Best ad</span></div>
+  <div class="kicker">03 — Best ad in the sample</div><h2>Ad 946551737840774 — Stay away, don't come close</h2><p class="lede">Strongest ad in the sampled set based on our creative/conversion scoring framework, blended with observable market signals.</p>
+  <div class="best">
+    <div class="best-l"><div class="thumb tall"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/801786036_904478145791011_651198784096930409_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=fn23IHvVg8MQ7kNvwEW_31V&amp;_nc_oc=AdrYoPAF5uxsmystQtlDCr7SXS51jOxvclv_oq2Zrmn3-B-CB8Z0jM8Yw-6Y2zQgfbc&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMPSmdmlF70AexPJxB0PdcuoX1coT2_b8kV1tLJIgPaqQ&amp;oe=6AC9FE2B" alt=""></div><a class="mono small" href="https://www.facebook.com/ads/library/?id=946551737840774">View in Ad Library ↗</a><div class="small muted">MySivi Spoken English App<br>Live since 2026-09-09 · 27 days<br>30s video · Hinglish</div></div>
+    <div class="best-r">
+      <div class="score-hero"><div><span class="mono kicker">Rank 1 of 10</span><b>86.7</b><em>Ad Strength Index</em></div>
+        <div class="sub"><div><span>Creative</span><b>84.0</b></div><div><span>Market</span><b>93.0</b></div><div><span>Quadrant</span><span class="pill q1">Proven winner</span></div></div></div>
+      <div class="dims"><div class="dim"><span>Hook</span><span class="bar "><i style="width:80%"></i></span><b>8</b><em>20%</em></div><div class="dim"><span>Clarity</span><span class="bar "><i style="width:90%"></i></span><b>9</b><em>15%</em></div><div class="dim"><span>Value prop</span><span class="bar "><i style="width:80%"></i></span><b>8</b><em>15%</em></div><div class="dim"><span>Offer</span><span class="bar "><i style="width:90%"></i></span><b>9</b><em>15%</em></div><div class="dim"><span>CTA</span><span class="bar "><i style="width:80%"></i></span><b>8</b><em>10%</em></div><div class="dim"><span>Specificity</span><span class="bar "><i style="width:80%"></i></span><b>8</b><em>10%</em></div><div class="dim"><span>Creative angle</span><span class="bar "><i style="width:90%"></i></span><b>9</b><em>10%</em></div><div class="dim"><span>Conversion intent</span><span class="bar "><i style="width:80%"></i></span><b>8</b><em>5%</em></div></div>
+      <div class="field"><label>Hook <span class="tag tag-observed">observed</span> <span class="pill ">Curiosity</span></label><p class="quote">Door reh, paas mat aa</p><p class="trans">Stay away, don't come close</p></div>
+      <div class="field"><label>First 3 seconds <span class="tag tag-observed">observed</span></label><p>Two AI-generated characters in mountaineering gear riding mountain bikes on a muddy trail in the mountains.</p></div>
+      <div class="field"><label>Body <span class="tag tag-observed">observed</span></label><p>The dialogue shifts into an impromptu conversation about learning English without a boring teacher, introducing MySivi as a fun game-like AI app with a ₹1 trial.</p></div>
+      <div class="field"><label>CTA <span class="tag tag-observed">observed</span></label><p>Said/shown: <b>Abhi MySivi download karo aur English bolna shuru karo</b> · Button: <b>Install now</b></p></div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="box"><div class="box-h">Why it wins</div><ul class="ev"><li><b>High hook engagement</b><span>Ad 946551737840774 achieves a hook score of 8/10 with its mountain biking visual</span></li><li><b>Strong price anchoring</b><span>The ₹1 trial offer is explicitly shown on screen and mentioned in the spoken CTA</span></li><li><b>Social proof integration</b><span>Visual overlays highlight 10M+ downloads and a 4.6-star rating</span></li></ul></div>
+    <div class="box"><div class="box-h">Steal this</div><ul class="bullets"><li>Cinematic AI-generated scenarios to bridge surreal hooks into product utility</li><li>₹1 entry offer to minimize conversion friction in the initial trial phase</li><li>Localized Hinglish dialogue that mirrors natural peer-to-peer conversation</li></ul><div class="box-h" style="margin-top:3mm">Biggest leak <span class="tag tag-inferred">inferred</span></div><p class="small">The AI-generated characters can feel slightly unnatural during extended dialogue moments.</p><div class="box-h" style="margin-top:3mm">Test next</div><p class="small">Test a version starting directly with the ₹1 trial price point in the first 3 seconds to test price-sensitive buyers.</p></div>
+  </div>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>04 Scoreboard</span></div>
+  <div class="kicker">04 — Ad scoreboard</div><h2>All scored ads, ranked</h2><p class="lede">Sorted by Ad Strength Index. Ties break on creative score, then on Meta's own order.</p>
+  <table class="board">
+    <thead><tr><th>#</th><th></th><th>Ad</th><th>Hook</th><th class="r">Hook</th><th class="r">Offer</th><th class="r">CTA</th><th class="r">Creative</th><th class="r">Market</th><th class="r">Index</th></tr></thead>
+    <tbody><tr class="win">
+      <td class="mono">1</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/801786036_904478145791011_651198784096930409_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=fn23IHvVg8MQ7kNvwEW_31V&amp;_nc_oc=AdrYoPAF5uxsmystQtlDCr7SXS51jOxvclv_oq2Zrmn3-B-CB8Z0jM8Yw-6Y2zQgfbc&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMPSmdmlF70AexPJxB0PdcuoX1coT2_b8kV1tLJIgPaqQ&amp;oe=6AC9FE2B" alt=""></div></td>
+      <td><b class="mono">946551737840774</b><br><span class="muted">AI-generated story · Hinglish · 30s</span></td>
+      <td><span class="muted">Curiosity ·</span> Stay away, don't come close</td>
+      <td class="r mono">8</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">84.0</td><td class="r mono">93.0</td><td class="r mono strong">86.7<br><span class="qtag q1">Proven winner</span></td></tr><tr class="">
+      <td class="mono">2</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/801045647_1381490540864227_8378331256061335542_n.jpg?_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=cN-gQRviYUoQ7kNvwGjXTSD&amp;_nc_oc=AdpXfKMEWialj_zkPNQdjWYEv-2HKgBsk1d2axrz9x0Tj5uCVkD1unMKE8vydtIu1eE&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQPqGfKXcL88RdfyRNQN1R2TJz494kB6-vmu8De0rl2puw&amp;oe=6AC9EC3B" alt=""></div></td>
+      <td><b class="mono">936537375615758</b><br><span class="muted">AI-generated story · Hinglish · 30s</span></td>
+      <td><span class="muted">Contrarian ·</span> Stay away, don't come close</td>
+      <td class="r mono">7</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">79.5</td><td class="r mono">81.9</td><td class="r mono strong">80.2<br><span class="qtag q1">Proven winner</span></td></tr><tr class="">
+      <td class="mono">3</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/754462544_2295698954593090_3025374412951612081_n.jpg?_nc_cat=109&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=cQtw6mv_7F4Q7kNvwHGQ43w&amp;_nc_oc=Ado_eokkDdBKsoyIaqnQKymSam3jjuvoK4DlF7jIryTmjO7bssMO9Z662uk2HY0uTKI&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQN1v6-sx7w1ReLrmlSJNSSPUX7AVQMBGgc4LQRp2O8UxA&amp;oe=6AC9EBB8" alt=""></div></td>
+      <td><b class="mono">3045760135765697</b><br><span class="muted">AI-generated story · Tamil · 27s</span></td>
+      <td><span class="muted">Curiosity ·</span> Save me, save me... say it in English</td>
+      <td class="r mono">9</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">84.5</td><td class="r mono">69.8</td><td class="r mono strong">80.1<br><span class="qtag q1">Proven winner</span></td></tr><tr class="">
+      <td class="mono">4</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/794969792_1073606588722976_1027518027855553355_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=W_Ha50rqk7AQ7kNvwGwKYo3&amp;_nc_oc=AdqN2hGY6_nWBr2kjybubYZ3tCmExS4zfkGpQ1Ntv3HZN7t10jginVDwT_tA6P5pZWI&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQM1pBH3tiFxkFWtiV5JIN5hX0WQGStlgq_XK-hgdDwh3Q&amp;oe=6AC9DF2F" alt=""></div></td>
+      <td><b class="mono">1515332897276845</b><br><span class="muted">AI-generated story · Hinglish · 41s</span></td>
+      <td><span class="muted">Problem ·</span> Hello brother, I am in a running auto</td>
+      <td class="r mono">8</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">83.0</td><td class="r mono">47.6</td><td class="r mono strong">72.4<br><span class="qtag q2">Hidden gem</span></td></tr><tr class="">
+      <td class="mono">5</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/767222366_1450464830249991_5896531252746529988_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=KsGUgyfcWZQQ7kNvwHQ13Cw&amp;_nc_oc=AdrV_hMIaqC5zk8E_ysSeCIS9goM_B4rSwm6ZOzz4XMU9wELGTQR7tApy_OR3Cvu0Lw&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMsjz6MBAAKa-RpPZVdBztYDTVUMZPpCQa3uzrjwh8SWw&amp;oe=6AC9F4B0" alt=""></div></td>
+      <td><b class="mono">1011549531682850</b><br><span class="muted">AI-generated story · Tamil · 27s</span></td>
+      <td><span class="muted">Curiosity ·</span> Move away, don't come close</td>
+      <td class="r mono">7</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">79.5</td><td class="r mono">53.1</td><td class="r mono strong">71.6<br><span class="qtag q2">Hidden gem</span></td></tr><tr class="">
+      <td class="mono">6</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/787942450_2654789691648057_8240362156512745487_n.jpg?_nc_cat=109&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=b3lhSxuybGwQ7kNvwET2jln&amp;_nc_oc=Adrtwlhia_wUJnkoW3cMcXtXuj8aSj8p10veqSKypsl6TQSV-l0U9190o_ysq7CyS4o&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQNiXRGH6Cmlz5HmSa8W6wbA0qDiwhqcWjh_rO9gBwbRPA&amp;oe=6AC9DA5F" alt=""></div></td>
+      <td><b class="mono">1602224664840152</b><br><span class="muted">Video-call demo · Kannada · 32s</span></td>
+      <td><span class="muted">Question ·</span> Meaning, if you didn't receive my call today, were you talkin…</td>
+      <td class="r mono">8</td><td class="r mono">8</td><td class="r mono">5</td>
+      <td class="r mono">74.0</td><td class="r mono">64.2</td><td class="r mono strong">71.1<br><span class="qtag q4">Retire</span></td></tr><tr class="">
+      <td class="mono">7</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/749213799_839805435737209_7971513695467254796_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=gWEgWyco020Q7kNvwHlEkxq&amp;_nc_oc=AdohB_y4vwavCIwBR3FUpdwLCSncnKkypqM6AZVYicSbskPABZPl1qbyu-M5--tYqYg&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMKPBqprSA5ixxZnNl-24fYqrlVyDWRXsTCoyaftzO0NA&amp;oe=6AC9F886" alt=""></div></td>
+      <td><b class="mono">2585720485217637</b><br><span class="muted">Video-call demo · Hinglish / … · 49s</span></td>
+      <td><span class="muted">Question ·</span> You say Red, I say Black. Let's start.</td>
+      <td class="r mono">7</td><td class="r mono">9</td><td class="r mono">8</td>
+      <td class="r mono">78.5</td><td class="r mono">39.6</td><td class="r mono strong">66.8<br><span class="qtag q4">Retire</span></td></tr><tr class="">
+      <td class="mono">8</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/791274669_1062157226571757_1570315754611311620_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=nyL07R8dUHMQ7kNvwHyHXKy&amp;_nc_oc=AdpL66QFdbNK9gp5QNSOgdApMGA_KY3sLcS3-Rzg-AQEs7AHlNkq613_kqrs9JykDH4&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMUV80nZJJyNHGJIXuOWe0mnoDvQbn4ppyExvfGw_HSTA&amp;oe=6AC9FCE7" alt=""></div></td>
+      <td><b class="mono">1083327227503975</b><br><span class="muted">Text-on-screen testimonial · English · 57s</span></td>
+      <td><span class="muted">Benefit ·</span> Speak fast and clear: 15 minutes a day is all it takes</td>
+      <td class="r mono">4</td><td class="r mono">8</td><td class="r mono">3</td>
+      <td class="r mono">56.0</td><td class="r mono">86.4</td><td class="r mono strong">65.1<br><span class="qtag q3">Study this</span></td></tr><tr class="">
+      <td class="mono">9</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/818365386_1132783985845908_4135950526350171994_n.jpg?_nc_cat=102&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=keJeDGOlKIsQ7kNvwEcHYcn&amp;_nc_oc=Adr5NWAnuD8kjfh9Dp-uKLCZQVYOJLcaUeVeP8kxKnDgnMNuJ4aQxyHZ3jhqbKhR-I4&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQOaEb4rrXfqGdsm4b258PteAvz9z8Ww1tLeM9DuG670PQ&amp;oe=6AC9FA9F" alt=""></div></td>
+      <td><b class="mono">2525947104551219</b><br><span class="muted">Video-call demo · Hinglish · 18s</span></td>
+      <td><span class="muted">Question ·</span> Meaning if I don't pick up the call now, you'll talk to someo…</td>
+      <td class="r mono">6</td><td class="r mono">4</td><td class="r mono">3</td>
+      <td class="r mono">50.5</td><td class="r mono">65.3</td><td class="r mono strong">54.9<br><span class="qtag q3">Study this</span></td></tr><tr class="">
+      <td class="mono">10</td><td><div class="thumb mini"><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/818384592_1734811487751656_2512854417093819160_n.jpg?_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=Z5l87mtuKG8Q7kNvwGfxgD2&amp;_nc_oc=Adq-tH130YPlDhXPtv9NLknQknar_tD6VY2gO5zltozpyJx-i-sXMyL6DIo7FURL5To&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQO7VtIwKNnoYmFojeOejARzqjqcFT-l12bx0gt0hR74jQ&amp;oe=6AC9E9BF" alt=""></div></td>
+      <td><b class="mono">2805580133171301</b><br><span class="muted">Video-call demo · Hinglish · 18s</span></td>
+      <td><span class="muted">Curiosity ·</span> meaning if I don't pick up the call now, will you talk to som…</td>
+      <td class="r mono">7</td><td class="r mono">4</td><td class="r mono">4</td>
+      <td class="r mono">56.5</td><td class="r mono">46.3</td><td class="r mono strong">53.4<br><span class="qtag q4">Retire</span></td></tr></tbody>
+  </table>
+  <div class="two" style="margin-top:4mm">
+    <div class="box"><svg viewBox="0 0 300 180" class="scatter">
+    <line x1="235.4" y1="10" x2="235.4" y2="150" class="med"/><line x1="30" y1="59.35000000000001" x2="290" y2="59.35000000000001" class="med"/>
+    <line x1="30" y1="150" x2="290" y2="150" class="ax"/><line x1="30" y1="10" x2="30" y2="150" class="ax"/>
+    <text x="288" y="20" class="ql" text-anchor="end">Proven winner</text><text x="34" y="20" class="ql">Study this</text>
+    <text x="288" y="144" class="ql" text-anchor="end">Hidden gem</text><text x="34" y="144" class="ql">Retire</text>
+    <text x="165" y="172" class="at" text-anchor="middle">Creative score →</text>
+    <text x="10" y="75" class="at" text-anchor="middle" transform="rotate(-90 10 75)">Market signal →</text>
+    <g><circle cx="248.4" cy="19.799999999999983" r="8" class="dot win"/><text x="248.4" y="22.799999999999983" class="dl">1</text></g><g><circle cx="236.70000000000002" cy="35.33999999999999" r="6.5" class="dot"/><text x="236.70000000000002" y="38.33999999999999" class="dl">2</text></g><g><circle cx="249.7" cy="52.28" r="6.5" class="dot"/><text x="249.7" y="55.28" class="dl">3</text></g><g><circle cx="245.79999999999998" cy="83.36" r="6.5" class="dot"/><text x="245.79999999999998" y="86.36" class="dl">4</text></g><g><circle cx="236.70000000000002" cy="75.66" r="6.5" class="dot"/><text x="236.70000000000002" y="78.66" class="dl">5</text></g><g><circle cx="222.4" cy="60.120000000000005" r="6.5" class="dot"/><text x="222.4" y="63.120000000000005" class="dl">6</text></g><g><circle cx="234.1" cy="94.56" r="6.5" class="dot"/><text x="234.1" y="97.56" class="dl">7</text></g><g><circle cx="175.60000000000002" cy="29.039999999999992" r="6.5" class="dot"/><text x="175.60000000000002" y="32.03999999999999" class="dl">8</text></g><g><circle cx="161.3" cy="58.58" r="6.5" class="dot"/><text x="161.3" y="61.58" class="dl">9</text></g><g><circle cx="176.89999999999998" cy="85.18" r="6.5" class="dot"/><text x="176.89999999999998" y="88.18" class="dl">10</text></g></svg></div>
+    <div class="box"><div class="box-h">Reading the grid</div><p class="small">Numbers are ranks. Dashed lines are the sample medians (creative 79.0, market 64.8).</p>
+      <p class="small"><b>Hidden gems:</b> #4, #5 — strong on paper, not yet backed by Meta's delivery. Cheapest wins to test.</p>
+      <p class="small"><b>Study this:</b> #8, #9 — the market rewards something the rubric under-scores. Worth a frame-by-frame look.</p>
+      <p class="small"><b>Creative clones:</b> 946551737840774 = 936537375615758; 2525947104551219 = 2805580133171301 — same video uploaded under multiple ad ids, a sign the advertiser is scaling it.</p>
+    </div>
+  </div>
+</section>
+<section class="page flow-page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>05 Individual ads</span></div>
+  <div class="kicker">05 — Individual ad analysis</div><h2>Every ad, one card each</h2><p class="lede">Hook, body and CTA as observed in the creative; target, angle and verdicts are Gemini's inference.</p>
+  
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/801786036_904478145791011_651198784096930409_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=fn23IHvVg8MQ7kNvwEW_31V&amp;_nc_oc=AdrYoPAF5uxsmystQtlDCr7SXS51jOxvclv_oq2Zrmn3-B-CB8Z0jM8Yw-6Y2zQgfbc&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMPSmdmlF70AexPJxB0PdcuoX1coT2_b8kV1tLJIgPaqQ&amp;oe=6AC9FE2B" alt=""></div><div class="small muted mono">946551737840774</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #01</span><span class="muted small">MySivi Spoken English App · AI-generated story · Hinglish · 30s · watched video</span></div>
+    <div class="chips"><span>Index <b>86.7</b></span><span>Creative <b>84.0</b></span><span>Market <b>93.0</b></span><span class="pill q1">Proven winner</span><span class="pill ghost">caption shared ×7</span><span class="pill ghost">clone of 936537375615758</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Curiosity · 8/10</label><p class="quote sm">Door reh, paas mat aa</p><p class="trans">Stay away, don't come close</p></div>
+      <div class="field"><label>CTA</label><p>Abhi MySivi download karo aur English bolna shuru karo <span class="muted">· "Install now"</span></p><label>Offer</label><p>3 days of Premium benefits for ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>The dialogue shifts into an impromptu conversation about learning English without a boring teacher, introducing MySivi as a fun game-like AI app with a ₹1 trial.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>AI cinematic story driven dialogue — <span class="muted">Young Indian adults wanting to learn spoken English affordably and without boring lessons</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Not knowing English well enough and finding traditional classes boring or expensive → Fluent English speaking skills quickly and enjoyably</p></div>
+      <div class="field"><label>Why it works</label><p>The unexpected cinematic AI mountain biking setting immediately grabs attention and seamlessly bridges into a relatable conversation about learning English.</p></div>
+      <div class="field"><label>Weakness</label><p>The AI-generated characters can feel slightly unnatural during extended dialogue moments.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a version starting directly with the ₹1 trial price point in the first 3 seconds to test price-sensitive buyers.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/801045647_1381490540864227_8378331256061335542_n.jpg?_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=cN-gQRviYUoQ7kNvwGjXTSD&amp;_nc_oc=AdpXfKMEWialj_zkPNQdjWYEv-2HKgBsk1d2axrz9x0Tj5uCVkD1unMKE8vydtIu1eE&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQPqGfKXcL88RdfyRNQN1R2TJz494kB6-vmu8De0rl2puw&amp;oe=6AC9EC3B" alt=""></div><div class="small muted mono">936537375615758</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #02</span><span class="muted small">MySivi Spoken English App · AI-generated story · Hinglish · 30s · watched video</span></div>
+    <div class="chips"><span>Index <b>80.2</b></span><span>Creative <b>79.5</b></span><span>Market <b>81.9</b></span><span class="pill q1">Proven winner</span><span class="pill ghost">caption shared ×7</span><span class="pill ghost">clone of 946551737840774</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Contrarian · 7/10</label><p class="quote sm">Door reh, paas mat aa</p><p class="trans">Stay away, don't come close</p></div>
+      <div class="field"><label>CTA</label><p>Abhi MySivi download karo aur English bolna shuru karo <span class="muted">· "Install now"</span></p><label>Offer</label><p>3 days of Premium benefits for ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>A male character tells a female character to stay away because he doesn't know English. She counters that she's learning English on MySivi, which uses an interactive game-like approach tailored to the user's level. The app has 10M+ downloads, 4.6 rating, and a ₹1 trial offer.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Fictional AI skit leading into low-cost app trial — <span class="muted">Young Indian adults looking to learn or improve spoken English affordably</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Inability to speak English causing social awkwardness or hesitation → Fluent English speaking skills without boring traditional lessons</p></div>
+      <div class="field"><label>Why it works</label><p>Combines a visually striking, unexpected cinematic opening with a highly relatable social insecurity and an ultra-low-friction ₹1 offer.</p></div>
+      <div class="field"><label>Weakness</label><p>The transition from the cinematic mountain biking narrative to the app UI feels abrupt.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a version where the AI character directly addresses the camera in a UGC style instead of the mountain bike skit.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/754462544_2295698954593090_3025374412951612081_n.jpg?_nc_cat=109&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=cQtw6mv_7F4Q7kNvwHGQ43w&amp;_nc_oc=Ado_eokkDdBKsoyIaqnQKymSam3jjuvoK4DlF7jIryTmjO7bssMO9Z662uk2HY0uTKI&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQN1v6-sx7w1ReLrmlSJNSSPUX7AVQMBGgc4LQRp2O8UxA&amp;oe=6AC9EBB8" alt=""></div><div class="small muted mono">3045760135765697</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #03</span><span class="muted small">MySivi - Best English Speaking App · AI-generated story · Tamil · 27s · watched video</span></div>
+    <div class="chips"><span>Index <b>80.1</b></span><span>Creative <b>84.5</b></span><span>Market <b>69.8</b></span><span class="pill q1">Proven winner</span><span class="pill ghost">caption shared ×2</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Curiosity · 9/10</label><p class="quote sm">காப்பாத்து காப்பாத்து... english-ல சொல்லு</p><p class="trans">Save me, save me... say it in English</p></div>
+      <div class="field"><label>CTA</label><p>So இப்பவே MySivi-ை install பண்ணி English பேச ஆரம்பி <span class="muted">· "Install now"</span></p><label>Offer</label><p>₹1 trial / 3 naatkalukku ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>A man is in danger outside an airplane window and needs to speak English to get help. The AI robot passenger recommends the MySivi app for practicing spoken English with an AI conversational partner, highlighting high user ratings, millions of downloads, and a trial offer of just ₹1.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Absurd sci-fi skit introducing a real-world language barrier — <span class="muted">Tamil speakers who struggle with spoken English and want an affordable, low-pressure way to practice.</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Inability to speak English when needed, and hesitation or lack of practice partners for spoken English. → Fluent spoken English without awkwardness or expensive traditional coaching classes.</p></div>
+      <div class="field"><label>Why it works</label><p>The absurd, high-stakes visual hook (a man floating outside a plane window) immediately creates cognitive dissonance and stops the scroll, cleanly pivoting into a relatable English-learning pain point.</p></div>
+      <div class="field"><label>Weakness</label><p>The transition from the wild airplane scenario to the standard app feature pitch feels slightly abrupt.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a variation where the man gets rescued only after successfully saying 'Help me' in English to the AI app inside.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/794969792_1073606588722976_1027518027855553355_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=W_Ha50rqk7AQ7kNvwGwKYo3&amp;_nc_oc=AdqN2hGY6_nWBr2kjybubYZ3tCmExS4zfkGpQ1Ntv3HZN7t10jginVDwT_tA6P5pZWI&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQM1pBH3tiFxkFWtiV5JIN5hX0WQGStlgq_XK-hgdDwh3Q&amp;oe=6AC9DF2F" alt=""></div><div class="small muted mono">1515332897276845</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #04</span><span class="muted small">MySivi Spoken English App · AI-generated story · Hinglish · 41s · watched video</span></div>
+    <div class="chips"><span>Index <b>72.4</b></span><span>Creative <b>83.0</b></span><span>Market <b>47.6</b></span><span class="pill q2">Hidden gem</span><span class="pill ghost">caption shared ×7</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Problem · 8/10</label><p class="quote sm">Hello bhaiya, I am in running auto</p><p class="trans">Hello brother, I am in a running auto</p></div>
+      <div class="field"><label>CTA</label><p>abhi ke abhi MySivi app install karo aur practice shuru karo <span class="muted">· "Install now"</span></p><label>Offer</label><p>3 days of Premium benefits for ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>The AI character corrects his English grammar on the spot (&quot;moving auto&quot; instead of &quot;running auto&quot;) and offers daily 15-minute practice sessions via the MySivi app to build fluency and confidence.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>AI character correcting everyday English mistakes in surreal scenarios — <span class="muted">Hindi speakers in India looking to improve their spoken English for career or daily communication</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Making grammatical errors in English and lacking confidence or money for expensive coaching classes → Speaking fluent English effortlessly with daily 15-minute AI practice</p></div>
+      <div class="field"><label>Why it works</label><p>The surreal visual of a cyborg on a bicycle chasing an auto-rickshaw instantly grabs attention, and the immediate pivot to solving a common social insecurity (bad English) creates high relevance.</p></div>
+      <div class="field"><label>Weakness</label><p>The AI-generated visuals can feel surreal or uncanny to some viewers, potentially distracting from the core product utility.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a variant where the AI character appears as a realistic human video-call interface to compare conversion rates against the sci-fi cyborg aesthetic.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/767222366_1450464830249991_5896531252746529988_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=KsGUgyfcWZQQ7kNvwHQ13Cw&amp;_nc_oc=AdrV_hMIaqC5zk8E_ysSeCIS9goM_B4rSwm6ZOzz4XMU9wELGTQR7tApy_OR3Cvu0Lw&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMsjz6MBAAKa-RpPZVdBztYDTVUMZPpCQa3uzrjwh8SWw&amp;oe=6AC9F4B0" alt=""></div><div class="small muted mono">1011549531682850</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #05</span><span class="muted small">MySivi - Best English Speaking App · AI-generated story · Tamil · 27s · watched video</span></div>
+    <div class="chips"><span>Index <b>71.6</b></span><span>Creative <b>79.5</b></span><span>Market <b>53.1</b></span><span class="pill q2">Hidden gem</span><span class="pill ghost">caption shared ×2</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Curiosity · 7/10</label><p class="quote sm">தள்ளிப் போ, கிட்ட வராத</p><p class="trans">Move away, don't come close</p></div>
+      <div class="field"><label>CTA</label><p>So இப்பவே MySivi-யை download பண்ணி english பேச ஆரம்பி <span class="muted">· "Install now"</span></p><label>Offer</label><p>3 days of Premium benefits for ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>A human who cannot speak English complains to his AI companion, who recommends the MySivi app as a personalized, gamified teacher that takes only 15 days to improve skills at ₹1 for 3 days.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>AI-human buddy skit introducing app solution — <span class="muted">Tamil speakers who want to learn spoken English for career or personal growth</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Inability to speak English leading to social or professional friction → Speaking English fluently and confidently within 15 days</p></div>
+      <div class="field"><label>Why it works</label><p>The high-production cinematic AI visuals combined with natural banter instantly grab attention, while the ₹1 trial offer removes all friction for conversion.</p></div>
+      <div class="field"><label>Weakness</label><p>The AI-generated visuals, while striking, have a slight uncanny valley effect that might distract some viewers from the core educational message.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a variant using real UGC talent reacting to the robot or app interface to compare conversion rates against the AI-generated narrative.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/787942450_2654789691648057_8240362156512745487_n.jpg?_nc_cat=109&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=b3lhSxuybGwQ7kNvwET2jln&amp;_nc_oc=Adrtwlhia_wUJnkoW3cMcXtXuj8aSj8p10veqSKypsl6TQSV-l0U9190o_ysq7CyS4o&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQNiXRGH6Cmlz5HmSa8W6wbA0qDiwhqcWjh_rO9gBwbRPA&amp;oe=6AC9DA5F" alt=""></div><div class="small muted mono">1602224664840152</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #06</span><span class="muted small">MySivi AI - Practice English · Video-call demo · Kannada · 32s · watched video</span></div>
+    <div class="chips"><span>Index <b>71.1</b></span><span>Creative <b>74.0</b></span><span>Market <b>64.2</b></span><span class="pill q4">Retire</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Question · 8/10</label><p class="quote sm">ಅಂದ್ರೆ ಇವತ್ತು ನನ್ನು ಕಾಲ್ ರಿಸೀವ್ ಮಾಡಿಲ್ಲ ಅಂದ್ರೆ ನೀವು ಬೇರೆ ಯಾರಾದ್ರೂ ಜೊತೆ ಮಾತಾಡ್ತಿದ್ರಾ</p><p class="trans">Meaning, if you didn't receive my call today, were you talking to someone else?</p></div>
+      <div class="field"><label>CTA</label><p>none <span class="muted">· "Install now"</span></p><label>Offer</label><p>1 Rupee trial offer</p></div>
+      <div class="field span3"><label>Body</label><p>The couple playfully discusses how talking to new people on English-speaking apps is better than scrolling Instagram, leading into an introduction of the MySivi app where 10M+ users practice spoken English 1-on-1.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Relatable relationship banter leading to app discovery — <span class="muted">Kannada speakers wanting to improve their spoken English</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Lack of speaking partners and awkwardness in practicing English → Fluent spoken English through regular 1-on-1 practice</p></div>
+      <div class="field"><label>Why it works</label><p>Starts with an engaging, natural relationship conversation that hooks regional viewers before seamlessly pivoting to the app solution.</p></div>
+      <div class="field"><label>Weakness</label><p>The transition from the video call skit to the app screen recording feels abrupt without a strong verbal transition.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Add burned-in subtitles for viewers watching with sound off and include a clear verbal call to action at the end.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/749213799_839805435737209_7971513695467254796_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=gWEgWyco020Q7kNvwHlEkxq&amp;_nc_oc=AdohB_y4vwavCIwBR3FUpdwLCSncnKkypqM6AZVYicSbskPABZPl1qbyu-M5--tYqYg&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMKPBqprSA5ixxZnNl-24fYqrlVyDWRXsTCoyaftzO0NA&amp;oe=6AC9F886" alt=""></div><div class="small muted mono">2585720485217637</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #07</span><span class="muted small">MySivi AI - Learn English · Video-call demo · Hinglish / English · 49s · watched video</span></div>
+    <div class="chips"><span>Index <b>66.8</b></span><span>Creative <b>78.5</b></span><span>Market <b>39.6</b></span><span class="pill q4">Retire</span><span class="pill ghost">caption shared ×7</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Question · 7/10</label><p class="quote sm">तुम Red बोलो, मैं Black बोलती हूँ। चलो, शुरू करते हैं।</p><p class="trans">You say Red, I say Black. Let's start.</p></div>
+      <div class="field"><label>CTA</label><p>क्यों अभी साइन अप करें और आज से ही MySivi पर English बोलना शुरू करें <span class="muted">· "Install now"</span></p><label>Offer</label><p>Trial for just 1 rupee (₹1)</p></div>
+      <div class="field span3"><label>Body</label><p>A real user practices daily English conversation with an AI tutor app, struggling initially with basic phrasing before seeing an offer for 1-rupee trials.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Live practice session leading into low-cost AI app pitch — <span class="muted">Hinglish speakers looking to learn or practice spoken English on a budget</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Hesitation and lack of practice partner for speaking English → Fluent English speaking with everyday conversational confidence</p></div>
+      <div class="field"><label>Why it works</label><p>Simulating a natural live conversation using an AI avatar hooks viewers instantly before smoothly transitioning into a high-value ₹1 trial offer.</p></div>
+      <div class="field"><label>Weakness</label><p>The transition from the roleplay demo to the app pitch takes 26 seconds, which is long for short-form feed placements.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Test a shorter edit that cuts to the ₹1 offer within the first 10 seconds to capture fast-scrolling users.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/791274669_1062157226571757_1570315754611311620_n.jpg?_nc_cat=107&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=nyL07R8dUHMQ7kNvwHyHXKy&amp;_nc_oc=AdpL66QFdbNK9gp5QNSOgdApMGA_KY3sLcS3-Rzg-AQEs7AHlNkq613_kqrs9JykDH4&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQMUV80nZJJyNHGJIXuOWe0mnoDvQbn4ppyExvfGw_HSTA&amp;oe=6AC9FCE7" alt=""></div><div class="small muted mono">1083327227503975</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #08</span><span class="muted small">MySivi AI · Text-on-screen testimonial · English · 57s · watched video</span></div>
+    <div class="chips"><span>Index <b>65.1</b></span><span>Creative <b>56.0</b></span><span>Market <b>86.4</b></span><span class="pill q3">Study this</span><span class="pill ghost">caption shared ×7</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Benefit · 4/10</label><p class="quote sm">Speak fast and clear: 15 minutes a day is all it takes</p></div>
+      <div class="field"><label>CTA</label><p>none <span class="muted">· "Install now"</span></p><label>Offer</label><p>trial at ₹1</p></div>
+      <div class="field span3"><label>Body</label><p>A continuous vertical text scroll presents a personal diary of an English learner—describing career aspirations, overcoming fear of judgment with an AI teacher, building confidence, and achieving daily progress.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Emotional first-person diary scroll — <span class="muted">Indians looking to improve English fluency for career growth and social confidence</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>fear of judgment when speaking English and lack of a safe practice environment → fluency, good job, higher salary, and pride for family</p></div>
+      <div class="field"><label>Why it works</label><p>The continuous diary-style text creates a hypnotic pacing that pulls emotional readers through the entire narrative.</p></div>
+      <div class="field"><label>Weakness</label><p>Extremely low product visibility; the app itself is hidden until the final seconds of a nearly one-minute video.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Cut the video down to 15 seconds, show the app UI in the first 3 seconds, and add a human voiceover reading the text.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/818365386_1132783985845908_4135950526350171994_n.jpg?_nc_cat=102&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=keJeDGOlKIsQ7kNvwEcHYcn&amp;_nc_oc=Adr5NWAnuD8kjfh9Dp-uKLCZQVYOJLcaUeVeP8kxKnDgnMNuJ4aQxyHZ3jhqbKhR-I4&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQOaEb4rrXfqGdsm4b258PteAvz9z8Ww1tLeM9DuG670PQ&amp;oe=6AC9FA9F" alt=""></div><div class="small muted mono">2525947104551219</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #09</span><span class="muted small">MySivi Spoken English App · Video-call demo · Hinglish · 18s · watched video</span></div>
+    <div class="chips"><span>Index <b>54.9</b></span><span>Creative <b>50.5</b></span><span>Market <b>65.3</b></span><span class="pill q3">Study this</span><span class="pill ghost">caption shared ×7</span><span class="pill ghost">clone of 2805580133171301</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Question · 6/10</label><p class="quote sm">Matlab ab main call nahi uthati toh kisi aur se baat karoge?</p><p class="trans">Meaning if I don't pick up the call now, you'll talk to someone else?</p></div>
+      <div class="field"><label>CTA</label><p>none <span class="muted">· "Install now"</span></p><label>Offer</label><p>₹1 trial</p></div>
+      <div class="field span3"><label>Body</label><p>The two speakers discuss how talking to strangers on a video call app feels a bit weird at first, but is a great way to practice English conversation instead of just scrolling Instagram.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Video-call demo / Peer conversation — <span class="muted">Young adults in India wanting to improve spoken English conversational skills</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Hesitation and lack of conversational practice in English → Fluency and confidence in English speaking</p></div>
+      <div class="field"><label>Why it works</label><p>The opening hook uses a dramatic relationship-style question that temporarily stops the scroll before pivoting to language practice.</p></div>
+      <div class="field"><label>Weakness</label><p>The viewer has no idea it's an ad for an English learning app until the very last frame.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Introduce the MySivi brand logo or app UI earlier in the video or include an overlay banner hinting at English practice.</p></div>
+    </div>
+  </div>
+</article>
+<article class="card">
+  <div class="card-l"><div class="thumb "><img src="https://scontent.fvag4-1.fna.fbcdn.net/v/t39.35426-6/818384592_1734811487751656_2512854417093819160_n.jpg?_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=1-7&amp;_nc_sid=c53f8f&amp;_nc_ohc=Z5l87mtuKG8Q7kNvwGfxgD2&amp;_nc_oc=Adq-tH130YPlDhXPtv9NLknQknar_tD6VY2gO5zltozpyJx-i-sXMyL6DIo7FURL5To&amp;_nc_zt=14&amp;_nc_ht=scontent.fvag4-1.fna&amp;_nc_gid=l8-tAnmT-YuvqGZOI-OVrA&amp;_nc_ss=78289&amp;oh=00_AQO7VtIwKNnoYmFojeOejARzqjqcFT-l12bx0gt0hR74jQ&amp;oe=6AC9E9BF" alt=""></div><div class="small muted mono">2805580133171301</div></div>
+  <div class="card-r">
+    <div class="card-h"><span class="mono kicker">Ad #10</span><span class="muted small">MySivi Spoken English App · Video-call demo · Hinglish · 18s · watched video</span></div>
+    <div class="chips"><span>Index <b>53.4</b></span><span>Creative <b>56.5</b></span><span>Market <b>46.3</b></span><span class="pill q4">Retire</span><span class="pill ghost">caption shared ×7</span><span class="pill ghost">clone of 2525947104551219</span></div>
+    <div class="grid3">
+      <div class="field span2"><label>Hook · Curiosity · 7/10</label><p class="quote sm">matlab ab main call nahi uthati toh kisi aur se baat karoge?</p><p class="trans">meaning if I don't pick up the call now, will you talk to someone else?</p></div>
+      <div class="field"><label>CTA</label><p>none <span class="muted">· "Install now"</span></p><label>Offer</label><p>₹1 trial</p></div>
+      <div class="field span3"><label>Body</label><p>A man and woman discuss how talking to new people on the app helps build English-speaking confidence.</p></div>
+      <div class="field"><label>Angle · likely target</label><p>Video-call scenario leading into app discovery — <span class="muted">Young adults in India wanting to improve spoken English casually</span></p></div>
+      <div class="field"><label>Pain → outcome</label><p>Hesitation and lack of practice partners for English fluency → Conversational English fluency through casual app chats</p></div>
+      <div class="field"><label>Why it works</label><p>The relationship banter hook immediately grabs attention before smoothly pivoting into the product utility.</p></div>
+      <div class="field"><label>Weakness</label><p>The app and brand name are hidden until the final two seconds of the video.</p></div>
+      <div class="field span2 rec"><label>Recommendation</label><p>Introduce the app name or logo watermark earlier in the video so viewers connect the skit to the brand sooner.</p></div>
+    </div>
+  </div>
+</article>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>06 Hooks</span></div>
+  <div class="kicker">06 — Hook analysis</div><h2>What happens in the first three seconds</h2><p class="lede">Curiosity hooks score highest in our framework, with ad 3045760135765697 reaching a 9/10. Surreal AI-generated scenarios outperform standard benefit hooks in capturing initial attention.</p>
+  <div class="two">
+    <div class="box"><div class="box-h">Hook types</div><div class="hbars">
+  <div class="hb"><span class="hb-l">Curiosity</span><span class="hb-t"><i style="width:40%"></i></span><span class="hb-v">4</span></div>
+  <div class="hb"><span class="hb-l">Question</span><span class="hb-t"><i style="width:30%"></i></span><span class="hb-v">3</span></div>
+  <div class="hb"><span class="hb-l">Contrarian</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div>
+  <div class="hb"><span class="hb-l">Problem</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div>
+  <div class="hb"><span class="hb-l">Benefit</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div></div><p class="small muted">Average hook score 7.1/10.</p></div>
+    <div class="box"><div class="box-h">Time to product <span class="tag tag-observed">observed</span></div><svg viewBox="0 0 300 162" class="strip"><line x1="34" y1="4" x2="34" y2="146" class="grid"/><text x="34" y="158" class="at" text-anchor="middle">0s</text><line x1="56.631578947368425" y1="4" x2="56.631578947368425" y2="146" class="grid"/><text x="56.631578947368425" y="158" class="at" text-anchor="middle">5s</text><line x1="79.26315789473685" y1="4" x2="79.26315789473685" y2="146" class="grid"/><text x="79.26315789473685" y="158" class="at" text-anchor="middle">10s</text><line x1="101.89473684210526" y1="4" x2="101.89473684210526" y2="146" class="grid"/><text x="101.89473684210526" y="158" class="at" text-anchor="middle">15s</text><line x1="124.52631578947368" y1="4" x2="124.52631578947368" y2="146" class="grid"/><text x="124.52631578947368" y="158" class="at" text-anchor="middle">20s</text><line x1="169.78947368421052" y1="4" x2="169.78947368421052" y2="146" class="grid"/><text x="169.78947368421052" y="158" class="at" text-anchor="middle">30s</text><line x1="237.68421052631578" y1="4" x2="237.68421052631578" y2="146" class="grid"/><text x="237.68421052631578" y="158" class="at" text-anchor="middle">45s</text>
+    <text x="0" y="13" class="at">#1</text><line x1="34" y1="10" x2="169.78947368421052" y2="10" class="dur"/><rect x="53.631578947368425" y="7" width="6" height="6" class="brand"/><circle cx="61.1578947368421" cy="10" r="3.4" class="prod"/><text x="0" y="27" class="at">#2</text><line x1="34" y1="24" x2="169.78947368421052" y2="24" class="dur"/><rect x="53.631578947368425" y="21" width="6" height="6" class="brand"/><circle cx="56.631578947368425" cy="24" r="3.4" class="prod"/><text x="0" y="41" class="at">#3</text><line x1="34" y1="38" x2="156.21052631578948" y2="38" class="dur"/><rect x="49.10526315789474" y="35" width="6" height="6" class="brand"/><circle cx="52.10526315789474" cy="38" r="3.4" class="prod"/><text x="0" y="55" class="at">#4</text><line x1="34" y1="52" x2="219.57894736842107" y2="52" class="dur"/><rect x="139.6315789473684" y="49" width="6" height="6" class="brand"/><circle cx="120" cy="52" r="3.4" class="prod"/><text x="0" y="69" class="at">#5</text><line x1="34" y1="66" x2="156.21052631578948" y2="66" class="dur"/><rect x="49.10526315789474" y="63" width="6" height="6" class="brand"/><circle cx="52.10526315789474" cy="66" r="3.4" class="prod"/><text x="0" y="83" class="at">#6</text><line x1="34" y1="80" x2="178.8421052631579" y2="80" class="dur"/><rect x="117" y="77" width="6" height="6" class="brand"/><circle cx="120" cy="80" r="3.4" class="prod"/><text x="0" y="97" class="at">#7</text><line x1="34" y1="94" x2="255.78947368421052" y2="94" class="dur"/><rect x="153.21052631578948" y="91" width="6" height="6" class="brand"/><circle cx="151.68421052631578" cy="94" r="3.4" class="prod"/><text x="0" y="111" class="at">#8</text><line x1="34" y1="108" x2="292" y2="108" class="dur"/><rect x="85.3157894736842" y="105" width="6" height="6" class="brand"/><circle cx="282.9473684210526" cy="108" r="3.4" class="prod"/><text x="0" y="125" class="at">#9</text><line x1="34" y1="122" x2="115.47368421052632" y2="122" class="dur"/><rect x="103.42105263157895" y="119" width="6" height="6" class="brand"/><circle cx="106.42105263157895" cy="122" r="3.4" class="prod"/><text x="0" y="139" class="at">#10</text><line x1="34" y1="136" x2="115.47368421052632" y2="136" class="dur"/><rect x="103.42105263157895" y="133" width="6" height="6" class="brand"/><circle cx="106.42105263157895" cy="136" r="3.4" class="prod"/>
+  </svg><div class="legend"><span><i class="lg prod"></i>App/product first on screen</span><span><i class="lg brand"></i>Brand first named</span><span><i class="lg dur"></i>Video length</span></div><p class="small muted">Median product reveal 16s · median brand mention 14s.</p></div>
+  </div>
+  <table class="board compact">
+    <thead><tr><th>#</th><th>Opening visual</th><th>Hook (English)</th><th>Type</th><th class="r">Score</th></tr></thead>
+    <tbody><tr><td class="mono">1</td><td>Two AI-generated characters in mountaineering gear riding mountain bikes on a muddy trail in the mountains.</td><td>Stay away, don't come close</td><td>Curiosity</td><td class="r mono">8</td></tr><tr><td class="mono">2</td><td>Two people in futuristic riding gear on mountain bikes in a muddy landscape, mountain in the background</td><td>Stay away, don't come close</td><td>Contrarian</td><td class="r mono">7</td></tr><tr><td class="mono">3</td><td>A man in a suit floating outside the window of an airplane mid-air, panicking, while a female AI robot sits c…</td><td>Save me, save me... say it in English</td><td>Curiosity</td><td class="r mono">9</td></tr><tr><td class="mono">4</td><td>A man in a green shirt sitting inside a moving auto-rickshaw talking on a phone, while a cybernetic woman rid…</td><td>Hello brother, I am in a running auto</td><td>Problem</td><td class="r mono">8</td></tr><tr><td class="mono">5</td><td>Two characters on retro motorcycles riding side by side in cinematic golden hour light; the male human charac…</td><td>Move away, don't come close</td><td>Curiosity</td><td class="r mono">7</td></tr><tr><td class="mono">6</td><td>A split-screen video call between a woman and a man wearing earphones.</td><td>Meaning, if you didn't receive my call today, were you talking to someone else?</td><td>Question</td><td class="r mono">8</td></tr><tr><td class="mono">7</td><td>Split screen showing an AI avatar on top and a human user at the bottom with Hinglish captions</td><td>You say Red, I say Black. Let's start.</td><td>Question</td><td class="r mono">7</td></tr><tr><td class="mono">8</td><td>Blue background with black centered text saying 'Speak fast and clear:' followed by '15 minutes a day is all …</td><td>Speak fast and clear: 15 minutes a day is all it takes</td><td>Benefit</td><td class="r mono">4</td></tr><tr><td class="mono">9</td><td>A split-screen video call showing a young woman talking.</td><td>Meaning if I don't pick up the call now, you'll talk to someone else?</td><td>Question</td><td class="r mono">6</td></tr><tr><td class="mono">10</td><td>A young woman on a video call looking directly at the camera, speaking</td><td>meaning if I don't pick up the call now, will you talk to someone else?</td><td>Curiosity</td><td class="r mono">7</td></tr></tbody>
+  </table>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>07 CTAs</span></div>
+  <div class="kicker">07 — CTA analysis</div><h2>How each ad asks for the install</h2><p class="lede">All 10 sampled ads end with an 'Install now' button. Spoken CTAs like 'Abhi MySivi download karo' provide direct instructions in 7 out of 10 creatives.</p>
+  <div class="kpis three">
+    <div><span>Button variety</span><b>1</b><em>&quot;Install now&quot; ×10</em></div>
+    <div><span>Silent CTAs</span><b>4/10</b><em>never say what to do next</em></div>
+    <div><span>Avg CTA score</span><b>6.3</b><em>of 10 · offer 7.8</em></div>
+  </div>
+  <div class="box"><div class="box-h">Offers observed</div><div class="hbars">
+  <div class="hb"><span class="hb-l">₹1 entry offer</span><span class="hb-t"><i style="width:90%"></i></span><span class="hb-v">9</span></div>
+  <div class="hb"><span class="hb-l">1 Rupee trial offer</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div></div></div>
+  <table class="board compact" style="margin-top:5mm">
+    <thead><tr><th>#</th><th>Said / shown in the creative</th><th>Button</th><th>Note</th><th class="r">CTA</th></tr></thead>
+    <tbody><tr><td class="mono">1</td><td>Abhi MySivi download karo aur English bolna shuru karo</td><td>Install now</td><td class="muted">Strong direct CTA backed by the low-risk ₹1 trial offer.</td><td class="r mono">8</td></tr><tr><td class="mono">2</td><td>Abhi MySivi download karo aur English bolna shuru karo</td><td>Install now</td><td class="muted">Strong multi-channel CTA with clear low-friction trial incentive.</td><td class="r mono">8</td></tr><tr><td class="mono">3</td><td>So இப்பவே MySivi-ை install பண்ணி English பேச ஆரம்பி</td><td>Install now</td><td class="muted">Clear, direct instruction backed by the ₹1 trial offer.</td><td class="r mono">8</td></tr><tr><td class="mono">4</td><td>abhi ke abhi MySivi app install karo aur practice shuru karo</td><td>Install now</td><td class="muted">Direct and urgent call to action paired with an unbeatable trial offer.</td><td class="r mono">8</td></tr><tr><td class="mono">5</td><td>So இப்பவே MySivi-யை download பண்ணி english பேச ஆரம்பி</td><td>Install now</td><td class="muted">Direct and immediate action requested with app store download prompt.</td><td class="r mono">8</td></tr><tr><td class="mono">6</td><td>none</td><td>Install now</td><td class="muted">The button is standard Meta CTA, but no verbal CTA is given inside the video.</td><td class="r mono">5</td></tr><tr><td class="mono">7</td><td>क्यों अभी साइन अप करें और आज से ही MySivi पर English बोलना शुरू करें</td><td>Install now</td><td class="muted">Strong directive combined with immediate action prompt and low-friction trial.</td><td class="r mono">8</td></tr><tr><td class="mono">8</td><td>none</td><td>Install now</td><td class="muted">Weak because the CTA is entirely text-only at the very end with no spoken encouragement or urgency.</td><td class="r mono">3</td></tr><tr><td class="mono">9</td><td>none</td><td>Install now</td><td class="muted">The button label is standard, but the video provides zero verbal or visual prompt to install during playback.</td><td class="r mono">3</td></tr><tr><td class="mono">10</td><td>none</td><td>Install now</td><td class="muted">Relies entirely on text branding at the end with no spoken call-to-action.</td><td class="r mono">4</td></tr></tbody>
+  </table>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>08 Creative patterns</span></div>
+  <div class="kicker">08 — Creative patterns</div><h2>What this advertiser keeps doing</h2>
+  <div class="pgrid"><div class="box"><div class="box-h">AI Storytelling</div><p class="small">Half of the portfolio uses AI-generated characters in high-stakes or surreal skits</p><p class="ev-line">5 out of 10 ads are categorized as AI-generated stories</p></div><div class="box"><div class="box-h">Price Transparency</div><p class="small">The ₹1 offer is the primary driver of the creative value proposition</p><p class="ev-line">8 out of 10 ads show the price on screen</p></div><div class="box"><div class="box-h">Late Product Entry</div><p class="small">Creative leads with narrative, often delaying the product reveal until the second half</p><p class="ev-line">Median product reveal is 16s across the sample</p></div><div class="box"><div class="box-h">Regional Localization</div><p class="small">The advertiser targets specific linguistic markets with dedicated creative assets</p><p class="ev-line">Sample includes ads in Hinglish, Tamil, and Kannada</p></div></div>
+  <div class="three-col">
+    <div class="box"><div class="box-h">Formats</div><div class="hbars">
+  <div class="hb"><span class="hb-l">AI-generated story</span><span class="hb-t"><i style="width:50%"></i></span><span class="hb-v">5</span></div>
+  <div class="hb"><span class="hb-l">Video-call demo</span><span class="hb-t"><i style="width:40%"></i></span><span class="hb-v">4</span></div>
+  <div class="hb"><span class="hb-l">Text-on-screen testimonial</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div></div></div>
+    <div class="box"><div class="box-h">Spoken language</div><div class="hbars">
+  <div class="hb"><span class="hb-l">Hinglish</span><span class="hb-t"><i style="width:60%"></i></span><span class="hb-v">6</span></div>
+  <div class="hb"><span class="hb-l">Tamil</span><span class="hb-t"><i style="width:20%"></i></span><span class="hb-v">2</span></div>
+  <div class="hb"><span class="hb-l">Kannada</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div>
+  <div class="hb"><span class="hb-l">English</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div></div></div>
+    <div class="box"><div class="box-h">Talent</div><div class="hbars">
+  <div class="hb"><span class="hb-l">AI-generated characters</span><span class="hb-t"><i style="width:50%"></i></span><span class="hb-v">5</span></div>
+  <div class="hb"><span class="hb-l">real people</span><span class="hb-t"><i style="width:40%"></i></span><span class="hb-v">4</span></div>
+  <div class="hb"><span class="hb-l">none</span><span class="hb-t"><i style="width:10%"></i></span><span class="hb-v">1</span></div></div></div>
+  </div>
+  <div class="box"><div class="box-h">Evidence grid — which ads use which lever <span class="tag tag-observed">observed</span></div>
+    <table class="matrix"><thead><tr><th></th><th><span>Numbers</span></th><th><span>Social proof</span></th><th><span>Urgency</span></th><th><span>Comparison</span></th><th><span>Objections</span></th><th><span>Before/after</span></th><th><span>Learner story</span></th><th><span>Price on screen</span></th><th><span>App UI shown</span></th><th><span>Human face</span></th></tr></thead>
+    <tbody><tr><td class="mono">#1</td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td></tr><tr><td class="mono">#2</td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr><tr><td class="mono">#3</td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr><tr><td class="mono">#4</td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td></tr><tr><td class="mono">#5</td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td></tr><tr><td class="mono">#6</td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr><tr><td class="mono">#7</td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr><tr><td class="mono">#8</td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i class="on"></i></td><td><i></i></td></tr><tr><td class="mono">#9</td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr><tr><td class="mono">#10</td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td><td><i class="on"></i></td><td><i class="on"></i></td></tr>
+    <tr class="tot"><td>Total</td><td class="mono">5</td><td class="mono">8</td><td class="mono">5</td><td class="mono">2</td><td class="mono">5</td><td class="mono">0</td><td class="mono">1</td><td class="mono">8</td><td class="mono">10</td><td class="mono">6</td></tr></tbody></table>
+  </div>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>09 Gaps</span></div>
+  <div class="kicker">09 — Competitive gaps</div><h2>What nobody in this sample is doing</h2><p class="lede">Each gap starts from a count in the evidence grid, not from opinion.</p>
+  <div class="gap"><div class="gap-n mono">01</div><div><h3>Missing Transformation Proof</h3><p class="ev-line">0 out of 10 ads use a before-and-after visual format</p><p class="small"><b>Why it matters.</b> Users cannot visualize the specific skill improvement they are buying</p><p class="small opp"><b>Opportunity.</b> Test a split-screen showing broken English vs. fluent English using the same prompt</p></div></div><div class="gap"><div class="gap-n mono">02</div><div><h3>Lack of Peer Validation</h3><p class="ev-line">Only 1 out of 10 ads features a real learner story</p><p class="small"><b>Why it matters.</b> AI characters can feel uncanny and reduce trust in educational outcomes</p><p class="small opp"><b>Opportunity.</b> Source 15-second selfie testimonials from actual users</p></div></div><div class="gap"><div class="gap-n mono">03</div><div><h3>Slow Product Identification</h3><p class="ev-line">Median product reveal is 16s; ad 1083327227503975 waits until 55s</p><p class="small"><b>Why it matters.</b> Feed users drop off before seeing the app interface</p><p class="small opp"><b>Opportunity.</b> Insert a 2-second UI pop-up within the first 5 seconds of every skit</p></div></div><div class="gap"><div class="gap-n mono">04</div><div><h3>Untapped Regional Markets</h3><p class="ev-line">Sample lacks Telugu, Bengali, and Marathi creatives</p><p class="small"><b>Why it matters.</b> These represent high-volume segments for English learning apps in India</p><p class="small opp"><b>Opportunity.</b> Localize existing winning AI scripts into Telugu and Bengali</p></div></div>
+</section>
+<section class="page flow-page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>10 New concepts</span></div>
+  <div class="kicker">10 — Three new ad concepts</div><h2>Built on the gaps, not on the competitor's ads</h2>
+  <article class="concept">
+    <div class="concept-h"><span class="mono kicker">Concept 1</span><h3>The Interview Transformation</h3><span class="pill ghost">exploits: None of the 10 ads use a before -&gt; after transformation</span><span class="pill ">Split-screen Video</span></div>
+    <div class="grid2">
+      <div class="field"><label>Hook</label><p class="quote sm">English ki wajah se rejection? Ab aur nahi.</p><p class="trans">Rejection because of English? No more.</p><label>Angle</label><p>Career growth through fluency</p></div>
+      <div class="field"><label>Script</label><ol class="beats"><li>0-3s: Split screen. Left side: Nervous candidate stuttering. Right side: Confident candidate speaking.</li><li>3-10s: Close up of MySivi app interface showing a 5-minute practice session.</li><li>10-20s: Right side candidate gets the job offer. Text: 3 din practice, ₹1 trial.</li><li>20-25s: Logo and Install Now button.</li></ol></div>
+      <div class="field"><label>Caption</label><p>Sirf ₹1 mein apni English sudharein aur career badhayein. Install now.</p><label>CTA</label><p><b>Install Now</b></p></div>
+      <div class="field"><label>Why it could work</label><p>Directly addresses the primary pain point of professional rejection.</p><label>Measure · kill if</label><p>CTR · <span class="muted">Hook rate below 20%</span></p></div>
+    </div></article><article class="concept">
+    <div class="concept-h"><span class="mono kicker">Concept 2</span><h3>The Coaching Class Comparison</h3><span class="pill ghost">exploits: Only 2 of 10 ads use a comparison against alternatives</span><span class="pill ">Text-overlay Video</span></div>
+    <div class="grid2">
+      <div class="field"><label>Hook</label><p class="quote sm">Coaching class-ku 5000 yen selavu panreenga?</p><p class="trans">Why spend 5000 on coaching classes?</p><label>Angle</label><p>Cost-efficiency vs traditional methods</p></div>
+      <div class="field"><label>Script</label><ol class="beats"><li>0-3s: Person looking at a high-priced coaching bill vs. MySivi app on phone.</li><li>3-10s: Fast-cut demo of the AI conversation feature in Tamil interface.</li><li>10-20s: Text: No travel, no high fees. Just ₹1 for 3 days.</li><li>20-25s: CTA screen with 10M+ download badge.</li></ol></div>
+      <div class="field"><label>Caption</label><p>English pesa kathuka coaching class thevai illai. MySivi iruku. Trial for ₹1.</p><label>CTA</label><p><b>Install Now</b></p></div>
+      <div class="field"><label>Why it could work</label><p>Uses price anchoring to make the ₹1 trial feel like an obvious choice.</p><label>Measure · kill if</label><p>Cost Per Install · <span class="muted">CPI higher than 2x current average</span></p></div>
+    </div></article><article class="concept">
+    <div class="concept-h"><span class="mono kicker">Concept 3</span><h3>The 3-Second UI Reveal</h3><span class="pill ghost">exploits: Median product reveal at 16s</span><span class="pill ">UI-First Demo</span></div>
+    <div class="grid2">
+      <div class="field"><label>Hook</label><p class="quote sm">Ee app tho English matladadam chala easy.</p><p class="trans">Speaking English is very easy with this app.</p><label>Angle</label><p>Immediate product utility</p></div>
+      <div class="field"><label>Script</label><ol class="beats"><li>0-3s: Phone screen showing the 'Start Speaking' button being pressed.</li><li>3-10s: Real-time AI voice interaction demo in Telugu.</li><li>10-20s: Quick montage of different lesson topics (Office, Travel, Friends).</li><li>20-25s: ₹1 offer sticker and Install Now.</li></ol></div>
+      <div class="field"><label>Caption</label><p>Telugu lo English nerchukondi. ₹1 trial offer limited time matrame.</p><label>CTA</label><p><b>Install Now</b></p></div>
+      <div class="field"><label>Why it could work</label><p>Solves the late product reveal issue by showing the app immediately.</p><label>Measure · kill if</label><p>Conversion Rate · <span class="muted">Drop-off rate at 3s higher than 60%</span></p></div>
+    </div></article>
+</section>
+<section class="page">
+  <div class="runhead"><span>MySivi · Ad Library Teardown</span><span>11 Recommendations</span></div>
+  <div class="kicker">11 — Final recommendations</div><h2>What I would do on Monday</h2>
+  <table class="board recs"><thead><tr><th>Action</th><th>Why</th><th>Effort</th><th>Impact</th></tr></thead>
+  <tbody><tr><td><b>Front-load product UI</b></td><td>The 16s median reveal is too slow for feed placements where users scroll quickly</td><td><span class="pill ghost">Low</span></td><td><span class="pill hot">High</span></td></tr><tr><td><b>Test before-and-after creative</b></td><td>Current ads focus on the process but ignore the visual proof of the result</td><td><span class="pill ghost">Med</span></td><td><span class="pill hot">High</span></td></tr><tr><td><b>Expand to Telugu and Bengali</b></td><td>The current sample is limited to three languages despite a massive 917 ad portfolio</td><td><span class="pill ghost">Med</span></td><td><span class="pill hot">High</span></td></tr><tr><td><b>Introduce a real user testimonial track</b></td><td>Only 1/10 ads uses a real story; human faces increase trust over AI characters</td><td><span class="pill ghost">High</span></td><td><span class="pill ghost">Med</span></td></tr></tbody></table>
+  <div class="kicker" style="margin-top:12mm">12 — Disclaimer & limitations</div>
+  <div class="box disclaimer">
+    <p><b>The ranking represents estimated creative effectiveness based on observable ad characteristics. It is not based on private campaign performance data.</b> The Meta Ad Library does not expose CTR, CPI, CPA, ROAS or spend for commercial ads in India.</p>
+    <ul class="small">
+      <li>Sample: top 10 active ads by Meta's impression sort out of 917 reported. Patterns describe this sample, not the whole account.</li>
+      <li>Creative grades come from Gemini against a fixed rubric; they are judgements and can vary slightly between runs. Weights, ranks, medians and gaps are deterministic.</li>
+      <li>Market Signal uses public behaviour (sort order, run length, placements, clones) as a proxy for advertiser confidence. It can be wrong for new ads or ads paused for reasons unrelated to results.</li>
+      <li>Dynamic Creative ads hold several variants; the first video variant was analysed. Creative URLs from Meta expire after a few days, so thumbnails in older copies of this report may not load.</li>
+      
+      <li>Strategist memo source: gemini. Generated 05 Oct 2026.</li>
+    </ul>
+  </div>
+</section></body></html>

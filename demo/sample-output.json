@@ -1,0 +1,1773 @@
+{
+  "run": {
+    "executionId": "11",
+    "workflow": "Ad Library Teardown — Facebook Ad Intelligence",
+    "input": {
+      "valid": true,
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=IN&is_targeted_country=false&media_type=all&q=%22MySivi%22&search_type=keyword_exact_phrase&sort_data[direction]=desc&sort_data[mode]=total_impressions",
+      "apifyActor": "curious_coder~facebook-ads-library-scraper",
+      "maxAds": 10,
+      "fetchCount": 15,
+      "country": "IN",
+      "query": "MySivi",
+      "pageId": null,
+      "adId": null,
+      "activeStatus": "active",
+      "searchType": "keyword_exact_phrase",
+      "sortMode": "total_impressions",
+      "impressionSorted": true,
+      "brand": "MySivi",
+      "preparedBy": "Tharani M",
+      "runStartedAt": "2026-10-05T21:20:40.752Z"
+    },
+    "models": {
+      "video": "gemini-3.5-flash-lite",
+      "repair": "gemini-3.1-flash-lite",
+      "strategist": "gemini-3-flash-preview",
+      "strategistBackup": "gemini-3.5-flash-lite"
+    }
+  },
+  "portfolio": {
+    "scrapedRows": 15,
+    "duplicatesRemoved": 0,
+    "duplicates": [],
+    "sampleSize": 10,
+    "reportedActiveAds": 917,
+    "pages": [
+      "MySivi Spoken English App",
+      "MySivi AI",
+      "MySivi - Best English Speaking App",
+      "MySivi AI - Practice English",
+      "MySivi AI - Learn English"
+    ],
+    "uniqueCaptions": 3,
+    "uniqueCreatives": 10,
+    "mediaMix": {
+      "video": 10
+    },
+    "dcoShare": 10,
+    "templateLeaks": [
+      "3045760135765697",
+      "1011549531682850",
+      "2585720485217637"
+    ],
+    "captionLanguages": [
+      "Hinglish",
+      "Tamil",
+      "Kannada"
+    ],
+    "platforms": [
+      "facebook",
+      "instagram",
+      "audience_network",
+      "messenger",
+      "threads"
+    ],
+    "destinations": {
+      "itunes.apple.com": 3,
+      "play.google.com": 7
+    },
+    "ctaButtons": [
+      "Install now"
+    ],
+    "oldestStart": "2026-07-21",
+    "newestStart": "2026-09-20"
+  },
+  "weights": {
+    "creative": {
+      "hookScore": 0.2,
+      "clarityScore": 0.15,
+      "valuePropScore": 0.15,
+      "offerScore": 0.15,
+      "ctaScore": 0.1,
+      "specificityScore": 0.1,
+      "creativeAngleScore": 0.1,
+      "conversionIntentScore": 0.05
+    },
+    "market": {
+      "impressionRank": 0.5,
+      "longevity": 0.3,
+      "distribution": 0.2
+    },
+    "blend": {
+      "creative": 0.7,
+      "market": 0.3
+    },
+    "longevityFullDays": 30
+  },
+  "medians": {
+    "creative": 79,
+    "market": 64.75
+  },
+  "winner": {
+    "rank": 1,
+    "adId": "946551737840774",
+    "pageName": "MySivi Spoken English App",
+    "adLibraryUrl": "https://www.facebook.com/ads/library/?id=946551737840774",
+    "libraryPosition": 1,
+    "startDate": "2026-09-09",
+    "daysActive": 27,
+    "durationS": 30,
+    "assetIds": [
+      "1602131598048094",
+      "1759850535124902"
+    ],
+    "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+    "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+    "cta": "Install now",
+    "language": "Hinglish",
+    "sameCopy": true,
+    "copyGroupSize": 7,
+    "analysisMode": "watched video",
+    "creativeScore": 84,
+    "marketSignal": 93,
+    "marketParts": {
+      "impressionRank": 100,
+      "longevity": 90,
+      "distribution": 80
+    },
+    "adStrengthIndex": 86.7,
+    "quadrant": "Proven winner",
+    "cloneOf": [
+      "936537375615758"
+    ],
+    "analysis": {
+      "confidence": "high",
+      "language": "Hinglish",
+      "format": "AI-generated story",
+      "talent": "AI-generated characters",
+      "first3s": {
+        "visual": "Two AI-generated characters in mountaineering gear riding mountain bikes on a muddy trail in the mountains.",
+        "audioOrText": "Door reh, paas mat aa"
+      },
+      "hook": {
+        "text": "Door reh, paas mat aa",
+        "english": "Stay away, don't come close",
+        "type": "Curiosity",
+        "strength": 8
+      },
+      "body": "The dialogue shifts into an impromptu conversation about learning English without a boring teacher, introducing MySivi as a fun game-like AI app with a ₹1 trial.",
+      "cta": {
+        "spoken": "Abhi MySivi download karo aur English bolna shuru karo",
+        "button": "Install now",
+        "strengthNote": "Strong direct CTA backed by the low-risk ₹1 trial offer."
+      },
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "offer": "3 days of Premium benefits for ₹1",
+      "productFirstSeenSec": 6,
+      "brandFirstMentionSec": 5,
+      "captionsBurnedIn": true,
+      "targetAudience": "Young Indian adults wanting to learn spoken English affordably and without boring lessons",
+      "painPoint": "Not knowing English well enough and finding traditional classes boring or expensive",
+      "desiredOutcome": "Fluent English speaking skills quickly and enjoyably",
+      "valueProposition": "Learn English naturally through AI like playing a game, tailored to your level, starting at just ₹1",
+      "creativeAngle": "AI cinematic story driven dialogue",
+      "emotionalTrigger": "Curiosity and aspiration",
+      "awarenessLevel": "Problem-aware",
+      "funnelStage": "MOF",
+      "proofMechanism": "10M+ downloads, 4.6 rating",
+      "urgencyMechanism": "none observed",
+      "visualConcept": "Cinematic AI-generated mountain biking scene featuring natural conversational dialogue introducing the app",
+      "patternInterrupt": "High-production AI cinematic mountain biking visuals in an educational app ad",
+      "flags": {
+        "quantifiedOutcome": true,
+        "socialProof": true,
+        "urgency": false,
+        "comparison": false,
+        "objectionHandling": true,
+        "beforeAfter": false,
+        "customerStory": false,
+        "priceShown": true,
+        "productUiShown": true,
+        "humanFace": false
+      },
+      "scores": {
+        "hookScore": 8,
+        "clarityScore": 9,
+        "valuePropScore": 8,
+        "offerScore": 9,
+        "ctaScore": 8,
+        "specificityScore": 8,
+        "creativeAngleScore": 9,
+        "conversionIntentScore": 8,
+        "productVisibility": 7,
+        "textDensity": 6
+      },
+      "observed": [
+        "AI-generated cinematic mountain biking visual style",
+        "Conversational Hinglish dialogue hook about staying away",
+        "App UI shown with lesson paths and unit selections",
+        "₹1 trial offer explicitly shown on screen",
+        "Social proof highlights 10M+ downloads and 4.6 rating"
+      ],
+      "inferred": [
+        "Likely targets lower-to-middle income mobile users in India looking for low-cost skill development",
+        "Appears to leverage trending AI video generation tools for high visual stopping power at low production cost"
+      ],
+      "whyItWorks": "The unexpected cinematic AI mountain biking setting immediately grabs attention and seamlessly bridges into a relatable conversation about learning English.",
+      "weakness": "The AI-generated characters can feel slightly unnatural during extended dialogue moments.",
+      "recommendation": "Test a version starting directly with the ₹1 trial price point in the first 3 seconds to test price-sensitive buyers."
+    }
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "adId": "946551737840774",
+      "pageName": "MySivi Spoken English App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=946551737840774",
+      "libraryPosition": 1,
+      "startDate": "2026-09-09",
+      "daysActive": 27,
+      "durationS": 30,
+      "assetIds": [
+        "1602131598048094",
+        "1759850535124902"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 84,
+      "marketSignal": 93,
+      "marketParts": {
+        "impressionRank": 100,
+        "longevity": 90,
+        "distribution": 80
+      },
+      "adStrengthIndex": 86.7,
+      "quadrant": "Proven winner",
+      "cloneOf": [
+        "936537375615758"
+      ],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish",
+        "format": "AI-generated story",
+        "talent": "AI-generated characters",
+        "first3s": {
+          "visual": "Two AI-generated characters in mountaineering gear riding mountain bikes on a muddy trail in the mountains.",
+          "audioOrText": "Door reh, paas mat aa"
+        },
+        "hook": {
+          "text": "Door reh, paas mat aa",
+          "english": "Stay away, don't come close",
+          "type": "Curiosity",
+          "strength": 8
+        },
+        "body": "The dialogue shifts into an impromptu conversation about learning English without a boring teacher, introducing MySivi as a fun game-like AI app with a ₹1 trial.",
+        "cta": {
+          "spoken": "Abhi MySivi download karo aur English bolna shuru karo",
+          "button": "Install now",
+          "strengthNote": "Strong direct CTA backed by the low-risk ₹1 trial offer."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "3 days of Premium benefits for ₹1",
+        "productFirstSeenSec": 6,
+        "brandFirstMentionSec": 5,
+        "captionsBurnedIn": true,
+        "targetAudience": "Young Indian adults wanting to learn spoken English affordably and without boring lessons",
+        "painPoint": "Not knowing English well enough and finding traditional classes boring or expensive",
+        "desiredOutcome": "Fluent English speaking skills quickly and enjoyably",
+        "valueProposition": "Learn English naturally through AI like playing a game, tailored to your level, starting at just ₹1",
+        "creativeAngle": "AI cinematic story driven dialogue",
+        "emotionalTrigger": "Curiosity and aspiration",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "10M+ downloads, 4.6 rating",
+        "urgencyMechanism": "none observed",
+        "visualConcept": "Cinematic AI-generated mountain biking scene featuring natural conversational dialogue introducing the app",
+        "patternInterrupt": "High-production AI cinematic mountain biking visuals in an educational app ad",
+        "flags": {
+          "quantifiedOutcome": true,
+          "socialProof": true,
+          "urgency": false,
+          "comparison": false,
+          "objectionHandling": true,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": false
+        },
+        "scores": {
+          "hookScore": 8,
+          "clarityScore": 9,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 8,
+          "creativeAngleScore": 9,
+          "conversionIntentScore": 8,
+          "productVisibility": 7,
+          "textDensity": 6
+        },
+        "observed": [
+          "AI-generated cinematic mountain biking visual style",
+          "Conversational Hinglish dialogue hook about staying away",
+          "App UI shown with lesson paths and unit selections",
+          "₹1 trial offer explicitly shown on screen",
+          "Social proof highlights 10M+ downloads and 4.6 rating"
+        ],
+        "inferred": [
+          "Likely targets lower-to-middle income mobile users in India looking for low-cost skill development",
+          "Appears to leverage trending AI video generation tools for high visual stopping power at low production cost"
+        ],
+        "whyItWorks": "The unexpected cinematic AI mountain biking setting immediately grabs attention and seamlessly bridges into a relatable conversation about learning English.",
+        "weakness": "The AI-generated characters can feel slightly unnatural during extended dialogue moments.",
+        "recommendation": "Test a version starting directly with the ₹1 trial price point in the first 3 seconds to test price-sensitive buyers."
+      }
+    },
+    {
+      "rank": 2,
+      "adId": "936537375615758",
+      "pageName": "MySivi Spoken English App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=936537375615758",
+      "libraryPosition": 3,
+      "startDate": "2026-09-09",
+      "daysActive": 27,
+      "durationS": 30,
+      "assetIds": [
+        "1398550798327628",
+        "28141907775458096"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 79.5,
+      "marketSignal": 81.9,
+      "marketParts": {
+        "impressionRank": 77.8,
+        "longevity": 90,
+        "distribution": 80
+      },
+      "adStrengthIndex": 80.2,
+      "quadrant": "Proven winner",
+      "cloneOf": [
+        "946551737840774"
+      ],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish",
+        "format": "AI-generated story",
+        "talent": "AI-generated characters",
+        "first3s": {
+          "visual": "Two people in futuristic riding gear on mountain bikes in a muddy landscape, mountain in the background",
+          "audioOrText": "Door reh, paas mat aa"
+        },
+        "hook": {
+          "text": "Door reh, paas mat aa",
+          "english": "Stay away, don't come close",
+          "type": "Contrarian",
+          "strength": 7
+        },
+        "body": "A male character tells a female character to stay away because he doesn't know English. She counters that she's learning English on MySivi, which uses an interactive game-like approach tailored to the user's level. The app has 10M+ downloads, 4.6 rating, and a ₹1 trial offer.",
+        "cta": {
+          "spoken": "Abhi MySivi download karo aur English bolna shuru karo",
+          "button": "Install now",
+          "strengthNote": "Strong multi-channel CTA with clear low-friction trial incentive."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "3 days of Premium benefits for ₹1",
+        "productFirstSeenSec": 5,
+        "brandFirstMentionSec": 5,
+        "captionsBurnedIn": true,
+        "targetAudience": "Young Indian adults looking to learn or improve spoken English affordably",
+        "painPoint": "Inability to speak English causing social awkwardness or hesitation",
+        "desiredOutcome": "Fluent English speaking skills without boring traditional lessons",
+        "valueProposition": "Gamified, personalized AI English learning starting at just ₹1",
+        "creativeAngle": "Fictional AI skit leading into low-cost app trial",
+        "emotionalTrigger": "Insecurity about English fluency combined with curiosity about AI learning",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "10M+ downloads, 4.6 rating mentioned",
+        "urgencyMechanism": "Limited time offer for ₹1 trial",
+        "visualConcept": "Cinematic AI-generated adventure riding scene morphing into app demo",
+        "patternInterrupt": "Cinematic, high-production-value AI visual of mountain biking in the mud in the first second",
+        "flags": {
+          "quantifiedOutcome": true,
+          "socialProof": true,
+          "urgency": true,
+          "comparison": false,
+          "objectionHandling": true,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 7,
+          "clarityScore": 8,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 8,
+          "creativeAngleScore": 8,
+          "conversionIntentScore": 8,
+          "productVisibility": 7,
+          "textDensity": 6
+        },
+        "observed": [
+          "AI-generated cinematic visuals of two mountain bikers",
+          "Hinglish dialogue about learning English with MySivi",
+          "App store listing UI showing 10M+ downloads and 4.6 rating",
+          "₹1 introductory pricing screen for 3 days of premium benefits"
+        ],
+        "inferred": [
+          "Likely uses synthetic video generation tools to capture immediate feed attention",
+          "Appears targeted at price-sensitive Indian mobile users",
+          "Appears designed to overcome skepticism through low barrier to entry"
+        ],
+        "whyItWorks": "Combines a visually striking, unexpected cinematic opening with a highly relatable social insecurity and an ultra-low-friction ₹1 offer.",
+        "weakness": "The transition from the cinematic mountain biking narrative to the app UI feels abrupt.",
+        "recommendation": "Test a version where the AI character directly addresses the camera in a UGC style instead of the mountain bike skit."
+      }
+    },
+    {
+      "rank": 3,
+      "adId": "3045760135765697",
+      "pageName": "MySivi - Best English Speaking App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=3045760135765697",
+      "libraryPosition": 5,
+      "startDate": "2026-07-25",
+      "daysActive": 73,
+      "durationS": 27,
+      "assetIds": [
+        "1737736220761814",
+        "1753771515753531"
+      ],
+      "headline": "English கத்துக்க ₹1 இருந்தா போதும்",
+      "body": "மிகச்சிறந்த Spoken English AI Teacher-ஐ பெறுங்கள் வெறும் ₹1க்கு! ஏற்கனவே. 40 லட்சத்துக்கும் மேலானோர் MySivi-ல English கத்துக்குறாங்க. நிஜ மனிதர்களுடன் பேசி உங்க Spoken English-ஐ வளர்த்துக்கோங்க. நீங்களும் Download பண்ணி ஆரம்பிங்க.",
+      "cta": "Install now",
+      "language": "Tamil",
+      "sameCopy": true,
+      "copyGroupSize": 2,
+      "analysisMode": "watched video",
+      "creativeScore": 84.5,
+      "marketSignal": 69.8,
+      "marketParts": {
+        "impressionRank": 55.6,
+        "longevity": 100,
+        "distribution": 60
+      },
+      "adStrengthIndex": 80.1,
+      "quadrant": "Proven winner",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "Tamil",
+        "format": "AI-generated story",
+        "talent": "AI-generated characters",
+        "first3s": {
+          "visual": "A man in a suit floating outside the window of an airplane mid-air, panicking, while a female AI robot sits calmly inside next to the window.",
+          "audioOrText": "காப்பாத்து காப்பாத்து... english-ல சொல்லு"
+        },
+        "hook": {
+          "text": "காப்பாத்து காப்பாத்து... english-ல சொல்லு",
+          "english": "Save me, save me... say it in English",
+          "type": "Curiosity",
+          "strength": 9
+        },
+        "body": "A man is in danger outside an airplane window and needs to speak English to get help. The AI robot passenger recommends the MySivi app for practicing spoken English with an AI conversational partner, highlighting high user ratings, millions of downloads, and a trial offer of just ₹1.",
+        "cta": {
+          "spoken": "So இப்பவே MySivi-ை install பண்ணி English பேச ஆரம்பி",
+          "button": "Install now",
+          "strengthNote": "Clear, direct instruction backed by the ₹1 trial offer."
+        },
+        "headline": "English கத்துக்க ₹1 இருந்தா போதும்",
+        "offer": "₹1 trial / 3 naatkalukku ₹1",
+        "productFirstSeenSec": 4,
+        "brandFirstMentionSec": 4,
+        "captionsBurnedIn": true,
+        "targetAudience": "Tamil speakers who struggle with spoken English and want an affordable, low-pressure way to practice.",
+        "painPoint": "Inability to speak English when needed, and hesitation or lack of practice partners for spoken English.",
+        "desiredOutcome": "Fluent spoken English without awkwardness or expensive traditional coaching classes.",
+        "valueProposition": "A 24/7 AI English speaking partner that helps you practice conversational English naturally for just ₹1.",
+        "creativeAngle": "Absurd sci-fi skit introducing a real-world language barrier",
+        "emotionalTrigger": "Urgency, panic, and the relatable embarrassment of not knowing English in a critical moment.",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "10M+ downloads, 4.6 rating on Play Store and 4.5 on App Store",
+        "urgencyMechanism": "₹1 trial offer ending soon",
+        "visualConcept": "Cinematic AI-generated surrealist airplane scene featuring a human in mid-air outside the window talking to an AI robot inside.",
+        "patternInterrupt": "A businessman floating outside an airplane window screaming for help in Tamil, contrasting surreal sci-fi visuals with a common everyday anxiety.",
+        "flags": {
+          "quantifiedOutcome": false,
+          "socialProof": true,
+          "urgency": true,
+          "comparison": false,
+          "objectionHandling": true,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 9,
+          "clarityScore": 8,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 8,
+          "creativeAngleScore": 9,
+          "conversionIntentScore": 8,
+          "productVisibility": 7,
+          "textDensity": 4
+        },
+        "observed": [
+          "Surreal opening visual of a man floating outside an airplane window.",
+          "Bilingual dialogue in Tamil with burned-in Tamil captions.",
+          "App store screenshots and rating statistics (4.6 Play Store) displayed in-video.",
+          "Promotional offer of ₹1 for 3 days shown via app UI."
+        ],
+        "inferred": [
+          "Likely uses cinematic AI-generated visuals to instantly spike curiosity and stop the scroll in a crowded feed.",
+          "Appears to target working-class or student audiences in Tamil Nadu who feel insecure about their English proficiency."
+        ],
+        "whyItWorks": "The absurd, high-stakes visual hook (a man floating outside a plane window) immediately creates cognitive dissonance and stops the scroll, cleanly pivoting into a relatable English-learning pain point.",
+        "weakness": "The transition from the wild airplane scenario to the standard app feature pitch feels slightly abrupt.",
+        "recommendation": "Test a variation where the man gets rescued only after successfully saying 'Help me' in English to the AI app inside."
+      }
+    },
+    {
+      "rank": 4,
+      "adId": "1515332897276845",
+      "pageName": "MySivi Spoken English App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=1515332897276845",
+      "libraryPosition": 9,
+      "startDate": "2026-09-04",
+      "daysActive": 32,
+      "durationS": 41,
+      "assetIds": [
+        "1095268823031281",
+        "1611801970596209"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 83,
+      "marketSignal": 47.6,
+      "marketParts": {
+        "impressionRank": 11.1,
+        "longevity": 100,
+        "distribution": 60
+      },
+      "adStrengthIndex": 72.4,
+      "quadrant": "Hidden gem",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish",
+        "format": "AI-generated story",
+        "talent": "AI-generated characters",
+        "first3s": {
+          "visual": "A man in a green shirt sitting inside a moving auto-rickshaw talking on a phone, while a cybernetic woman rides a bicycle alongside him.",
+          "audioOrText": "Hello bhaiya, I am in running auto"
+        },
+        "hook": {
+          "text": "Hello bhaiya, I am in running auto",
+          "english": "Hello brother, I am in a running auto",
+          "type": "Problem",
+          "strength": 7
+        },
+        "body": "The AI character corrects his English grammar on the spot (\"moving auto\" instead of \"running auto\") and offers daily 15-minute practice sessions via the MySivi app to build fluency and confidence.",
+        "cta": {
+          "spoken": "abhi ke abhi MySivi app install karo aur practice shuru karo",
+          "button": "Install now",
+          "strengthNote": "Direct and urgent call to action paired with an unbeatable trial offer."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "3 days of Premium benefits for ₹1",
+        "productFirstSeenSec": 19,
+        "brandFirstMentionSec": 24,
+        "captionsBurnedIn": true,
+        "targetAudience": "Hindi speakers in India looking to improve their spoken English for career or daily communication",
+        "painPoint": "Making grammatical errors in English and lacking confidence or money for expensive coaching classes",
+        "desiredOutcome": "Speaking fluent English effortlessly with daily 15-minute AI practice",
+        "valueProposition": "A 24/7 AI English teacher that provides 1-on-1 speaking practice tailored to your level for just ₹1",
+        "creativeAngle": "AI character correcting everyday English mistakes in surreal scenarios",
+        "emotionalTrigger": "Embarrassment over bad English and relief at an affordable, non-judgmental solution",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "TOF",
+        "proofMechanism": "10M+ downloads shown in app store screenshot",
+        "urgencyMechanism": "Limited time offer for ₹1 trial",
+        "visualConcept": "Surreal AI-generated cinematic interaction between a human passenger in an auto and a cyborg woman on a bicycle",
+        "patternInterrupt": "A sci-fi cyborg woman cycling alongside a traditional Indian auto-rickshaw correcting English grammar",
+        "flags": {
+          "quantifiedOutcome": false,
+          "socialProof": true,
+          "urgency": true,
+          "comparison": false,
+          "objectionHandling": true,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": false
+        },
+        "scores": {
+          "hookScore": 8,
+          "clarityScore": 9,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 7,
+          "creativeAngleScore": 9,
+          "conversionIntentScore": 8,
+          "productVisibility": 7,
+          "textDensity": 6
+        },
+        "observed": [
+          "AI-generated visual style featuring a cyborg cyclist and an auto passenger",
+          "Real-time grammatical correction of Hinglish phrasing",
+          "App store screenshot displaying 10M+ downloads",
+          "Pricing tier shown at ₹1 for 3 days of trial",
+          "App UI shown demonstrating structured learning modules"
+        ],
+        "inferred": [
+          "Likely targets younger mobile-first Indian users seeking low-cost skill development",
+          "Appears to leverage hyper-realistic AI video generation to capture thumb-stop attention",
+          "Likely resonates strongly due to the relatable fear of making English errors in public"
+        ],
+        "whyItWorks": "The surreal visual of a cyborg on a bicycle chasing an auto-rickshaw instantly grabs attention, and the immediate pivot to solving a common social insecurity (bad English) creates high relevance.",
+        "weakness": "The AI-generated visuals can feel surreal or uncanny to some viewers, potentially distracting from the core product utility.",
+        "recommendation": "Test a variant where the AI character appears as a realistic human video-call interface to compare conversion rates against the sci-fi cyborg aesthetic."
+      }
+    },
+    {
+      "rank": 5,
+      "adId": "1011549531682850",
+      "pageName": "MySivi - Best English Speaking App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=1011549531682850",
+      "libraryPosition": 8,
+      "startDate": "2026-08-07",
+      "daysActive": 60,
+      "durationS": 27,
+      "assetIds": [
+        "1228458426074367",
+        "1580633726846021"
+      ],
+      "headline": "English கத்துக்க ₹1 இருந்தா போதும்",
+      "body": "மிகச்சிறந்த Spoken English AI Teacher-ஐ பெறுங்கள் வெறும் ₹1க்கு! ஏற்கனவே. 40 லட்சத்துக்கும் மேலானோர் MySivi-ல English கத்துக்குறாங்க. நிஜ மனிதர்களுடன் பேசி உங்க Spoken English-ஐ வளர்த்துக்கோங்க. நீங்களும் Download பண்ணி ஆரம்பிங்க.",
+      "cta": "Install now",
+      "language": "Tamil",
+      "sameCopy": true,
+      "copyGroupSize": 2,
+      "analysisMode": "watched video",
+      "creativeScore": 79.5,
+      "marketSignal": 53.1,
+      "marketParts": {
+        "impressionRank": 22.2,
+        "longevity": 100,
+        "distribution": 60
+      },
+      "adStrengthIndex": 71.6,
+      "quadrant": "Hidden gem",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "Tamil",
+        "format": "AI-generated story",
+        "talent": "AI-generated characters",
+        "first3s": {
+          "visual": "Two characters on retro motorcycles riding side by side in cinematic golden hour light; the male human character points accusingly at the female AI robot character.",
+          "audioOrText": "தள்ளிப் போ, கிட்ட வராத (Move away, don't come close)"
+        },
+        "hook": {
+          "text": "தள்ளிப் போ, கிட்ட வராத",
+          "english": "Move away, don't come close",
+          "type": "Curiosity",
+          "strength": 7
+        },
+        "body": "A human who cannot speak English complains to his AI companion, who recommends the MySivi app as a personalized, gamified teacher that takes only 15 days to improve skills at ₹1 for 3 days.",
+        "cta": {
+          "spoken": "So இப்பவே MySivi-யை download பண்ணி english பேச ஆரம்பி",
+          "button": "Install now",
+          "strengthNote": "Direct and immediate action requested with app store download prompt."
+        },
+        "headline": "English கத்துக்க ₹1 இருந்தா போதும்",
+        "offer": "3 days of Premium benefits for ₹1",
+        "productFirstSeenSec": 4,
+        "brandFirstMentionSec": 4,
+        "captionsBurnedIn": true,
+        "targetAudience": "Tamil speakers who want to learn spoken English for career or personal growth",
+        "painPoint": "Inability to speak English leading to social or professional friction",
+        "desiredOutcome": "Speaking English fluently and confidently within 15 days",
+        "valueProposition": "AI-powered personalized English learning app designed like a game, tailored to your level",
+        "creativeAngle": "AI-human buddy skit introducing app solution",
+        "emotionalTrigger": "Humor and relatability regarding language barriers",
+        "awarenessLevel": "Solution-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "10M+ downloads, 4.6 rating on Play Store, 4.5 on App Store",
+        "urgencyMechanism": "₹1 trial offer for limited time",
+        "visualConcept": "Cinematic AI-generated motorcycle ride between a man and a female robot, transitioning into app UI demonstrations",
+        "patternInterrupt": "Cinematic sci-fi buddy banter on motorcycles in a Tamil ad format",
+        "flags": {
+          "quantifiedOutcome": true,
+          "socialProof": true,
+          "urgency": true,
+          "comparison": false,
+          "objectionHandling": false,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": false
+        },
+        "scores": {
+          "hookScore": 7,
+          "clarityScore": 8,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 8,
+          "creativeAngleScore": 8,
+          "conversionIntentScore": 8,
+          "productVisibility": 7,
+          "textDensity": 6
+        },
+        "observed": [
+          "Features AI-generated visuals of a man and a robot riding motorcycles.",
+          "Promotes MySivi app with a ₹1 for 3 days trial offer.",
+          "Shows app interface screens highlighting 10M+ downloads and ratings (4.6 Play Store, 4.5 App Store).",
+          "Uses burned-in Tamil captions throughout the 27-second video."
+        ],
+        "inferred": [
+          "Likely uses AI image generation tools to produce high-engagement cinematic visuals at low production cost.",
+          "Appears targeted at mobile-first users in Tamil Nadu looking for accessible English learning solutions.",
+          "Likely performs well due to the strong introductory hook and low barrier-to-entry pricing."
+        ],
+        "whyItWorks": "The high-production cinematic AI visuals combined with natural banter instantly grab attention, while the ₹1 trial offer removes all friction for conversion.",
+        "weakness": "The AI-generated visuals, while striking, have a slight uncanny valley effect that might distract some viewers from the core educational message.",
+        "recommendation": "Test a variant using real UGC talent reacting to the robot or app interface to compare conversion rates against the AI-generated narrative."
+      }
+    },
+    {
+      "rank": 6,
+      "adId": "1602224664840152",
+      "pageName": "MySivi AI - Practice English",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=1602224664840152",
+      "libraryPosition": 6,
+      "startDate": "2026-08-30",
+      "daysActive": 37,
+      "durationS": 32,
+      "assetIds": [
+        "1082760367590758",
+        "1519130449964939"
+      ],
+      "headline": "English ಕಲಿಯುವುದು ಈಗ ಸುಲಭ",
+      "body": "AI ಟೀಚರ್ ನಿಮಗೆ ಕನ್ನಡದಲ್ಲಿ English ಕಲಿಸುತ್ತದೆ. MySivi ಆಪ್ನಲ್ಲಿ ಯಾವಾಗ ಬೇಕಾದರೂ, ಎಲ್ಲಿಯಾದರೂ practice ಮಾಡಿ. ದಿನಕ್ಕೆ 15 ನಿಮಿಷ practice ಮಾಡಿ, English ಚೆನ್ನಾಗಿ ಕಲಿಯಿರಿ.",
+      "cta": "Install now",
+      "language": "Kannada",
+      "sameCopy": false,
+      "copyGroupSize": 1,
+      "analysisMode": "watched video",
+      "creativeScore": 74,
+      "marketSignal": 64.2,
+      "marketParts": {
+        "impressionRank": 44.4,
+        "longevity": 100,
+        "distribution": 60
+      },
+      "adStrengthIndex": 71.1,
+      "quadrant": "Retire",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "Kannada",
+        "format": "Video-call demo",
+        "talent": "real people",
+        "first3s": {
+          "visual": "A split-screen video call between a woman and a man wearing earphones.",
+          "audioOrText": "ಅಂದ್ರೆ ಇವತ್ತು ನನ್ನು ಕಾಲ್ ರಿಸೀವ್ ಮಾಡಿಲ್ಲ ಅಂದ್ರೆ ನೀವು ಬೇರೆ ಯಾರಾದ್ರೂ ಜೊತೆ ಮಾತಾಡ್ತಿದ್ರಾ"
+        },
+        "hook": {
+          "text": "ಅಂದ್ರೆ ಇವತ್ತು ನನ್ನು ಕಾಲ್ ರಿಸೀವ್ ಮಾಡಿಲ್ಲ ಅಂದ್ರೆ ನೀವು ಬೇರೆ ಯಾರಾದ್ರೂ ಜೊತೆ ಮಾತಾಡ್ತಿದ್ರಾ",
+          "english": "Meaning, if you didn't receive my call today, were you talking to someone else?",
+          "type": "Question",
+          "strength": 8
+        },
+        "body": "The couple playfully discusses how talking to new people on English-speaking apps is better than scrolling Instagram, leading into an introduction of the MySivi app where 10M+ users practice spoken English 1-on-1.",
+        "cta": {
+          "spoken": "none",
+          "button": "Install now",
+          "strengthNote": "The button is standard Meta CTA, but no verbal CTA is given inside the video."
+        },
+        "headline": "English ಕಲಿಯುವುದು ಈಗ ಸುಲಭ",
+        "offer": "1 Rupee trial offer",
+        "productFirstSeenSec": 19,
+        "brandFirstMentionSec": 19,
+        "captionsBurnedIn": false,
+        "targetAudience": "Kannada speakers wanting to improve their spoken English",
+        "painPoint": "Lack of speaking partners and awkwardness in practicing English",
+        "desiredOutcome": "Fluent spoken English through regular 1-on-1 practice",
+        "valueProposition": "Practice English with 10M+ learners on MySivi for just 1 rupee",
+        "creativeAngle": "Relatable relationship banter leading to app discovery",
+        "emotionalTrigger": "Curiosity and playful jealousy",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "TOF",
+        "proofMechanism": "10M+ downloads shown on Play Store screen",
+        "urgencyMechanism": "Limited time offer",
+        "visualConcept": "Video call skit transitioning into app UI demonstration",
+        "patternInterrupt": "Relatable relationship conversation in Kannada at the very beginning",
+        "flags": {
+          "quantifiedOutcome": false,
+          "socialProof": true,
+          "urgency": true,
+          "comparison": true,
+          "objectionHandling": false,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 8,
+          "clarityScore": 7,
+          "valuePropScore": 8,
+          "offerScore": 8,
+          "ctaScore": 5,
+          "specificityScore": 7,
+          "creativeAngleScore": 8,
+          "conversionIntentScore": 7,
+          "productVisibility": 6,
+          "textDensity": 3
+        },
+        "observed": [
+          "Opens with a video call conversation in Kannada between a man and a woman.",
+          "Transitions into screen recordings of the MySivi app on Google Play Store.",
+          "Highlights 10M+ downloads and a 1 Rupee trial offer.",
+          "Features app interface showing 24/7 AI English teacher and unlimited access."
+        ],
+        "inferred": [
+          "Likely targets young adults in Karnataka looking to practice English casually.",
+          "Appears to leverage native regional language to build instant trust.",
+          "Likely uses the 1 Rupee offer to lower friction for first-time app installs."
+        ],
+        "whyItWorks": "Starts with an engaging, natural relationship conversation that hooks regional viewers before seamlessly pivoting to the app solution.",
+        "weakness": "The transition from the video call skit to the app screen recording feels abrupt without a strong verbal transition.",
+        "recommendation": "Add burned-in subtitles for viewers watching with sound off and include a clear verbal call to action at the end."
+      }
+    },
+    {
+      "rank": 7,
+      "adId": "2585720485217637",
+      "pageName": "MySivi AI - Learn English",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=2585720485217637",
+      "libraryPosition": 10,
+      "startDate": "2026-07-21",
+      "daysActive": 77,
+      "durationS": 49,
+      "assetIds": [
+        "1526257985866396",
+        "843413618527189"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 78.5,
+      "marketSignal": 39.6,
+      "marketParts": {
+        "impressionRank": 0,
+        "longevity": 100,
+        "distribution": 48
+      },
+      "adStrengthIndex": 66.8,
+      "quadrant": "Retire",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish / English",
+        "format": "Video-call demo",
+        "talent": "real people",
+        "first3s": {
+          "visual": "Split screen showing an AI avatar on top and a human user at the bottom with Hinglish captions",
+          "audioOrText": "तुम Red बोलो, मैं Black बोलती हूँ। चलो, शुरू करते हैं।"
+        },
+        "hook": {
+          "text": "तुम Red बोलो, मैं Black बोलती हूँ। चलो, शुरू करते हैं।",
+          "english": "You say Red, I say Black. Let's start.",
+          "type": "Question",
+          "strength": 7
+        },
+        "body": "A real user practices daily English conversation with an AI tutor app, struggling initially with basic phrasing before seeing an offer for 1-rupee trials.",
+        "cta": {
+          "spoken": "क्यों अभी साइन अप करें और आज से ही MySivi पर English बोलना शुरू करें",
+          "button": "Install now",
+          "strengthNote": "Strong directive combined with immediate action prompt and low-friction trial."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "Trial for just 1 rupee (₹1)",
+        "productFirstSeenSec": 26,
+        "brandFirstMentionSec": 27,
+        "captionsBurnedIn": true,
+        "targetAudience": "Hinglish speakers looking to learn or practice spoken English on a budget",
+        "painPoint": "Hesitation and lack of practice partner for speaking English",
+        "desiredOutcome": "Fluent English speaking with everyday conversational confidence",
+        "valueProposition": "1-on-1 AI speaking practice that is 7x cheaper than normal classes with a ₹1 trial",
+        "creativeAngle": "Live practice session leading into low-cost AI app pitch",
+        "emotionalTrigger": "Aspiration and fear of missing out on affordable learning",
+        "awarenessLevel": "Solution-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "10M+ downloads and user interaction demo",
+        "urgencyMechanism": "none",
+        "visualConcept": "Video-call simulation with split-screen AI avatar and human user, transitioning into app store screenshots",
+        "patternInterrupt": "Split-screen video call format mimicking personal FaceTime/WhatsApp calls",
+        "flags": {
+          "quantifiedOutcome": true,
+          "socialProof": true,
+          "urgency": false,
+          "comparison": true,
+          "objectionHandling": false,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 7,
+          "clarityScore": 8,
+          "valuePropScore": 8,
+          "offerScore": 9,
+          "ctaScore": 8,
+          "specificityScore": 7,
+          "creativeAngleScore": 8,
+          "conversionIntentScore": 8,
+          "productVisibility": 6,
+          "textDensity": 6
+        },
+        "observed": [
+          "Video opens with a simulated video call between an AI character and a human user",
+          "Sentences are translated in real-time with Hinglish audio and English text on screen",
+          "App store listing appears at 26 seconds showing 10M+ downloads",
+          "Trial price of ₹1 is explicitly highlighted"
+        ],
+        "inferred": [
+          "Likely targets cost-conscious learners in India who want private tutoring without high fees",
+          "Appears to leverage familiar video-calling UI to build instant rapport before pitching"
+        ],
+        "whyItWorks": "Simulating a natural live conversation using an AI avatar hooks viewers instantly before smoothly transitioning into a high-value ₹1 trial offer.",
+        "weakness": "The transition from the roleplay demo to the app pitch takes 26 seconds, which is long for short-form feed placements.",
+        "recommendation": "Test a shorter edit that cuts to the ₹1 offer within the first 10 seconds to capture fast-scrolling users."
+      }
+    },
+    {
+      "rank": 8,
+      "adId": "1083327227503975",
+      "pageName": "MySivi AI",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=1083327227503975",
+      "libraryPosition": 2,
+      "startDate": "2026-09-02",
+      "daysActive": 34,
+      "durationS": 57,
+      "assetIds": [
+        "1031803519428430",
+        "1549816993436158"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 56,
+      "marketSignal": 86.4,
+      "marketParts": {
+        "impressionRank": 88.9,
+        "longevity": 100,
+        "distribution": 60
+      },
+      "adStrengthIndex": 65.1,
+      "quadrant": "Study this",
+      "cloneOf": [],
+      "analysis": {
+        "confidence": "high",
+        "language": "English",
+        "format": "Text-on-screen testimonial",
+        "talent": "none",
+        "first3s": {
+          "visual": "Blue background with black centered text saying 'Speak fast and clear:' followed by '15 minutes a day is all it takes'",
+          "audioOrText": "Upbeat instrumental music playing, no spoken voiceover, text on screen reads 'Speak fast and clear:'"
+        },
+        "hook": {
+          "text": "Speak fast and clear: 15 minutes a day is all it takes",
+          "english": "Speak fast and clear: 15 minutes a day is all it takes",
+          "type": "Benefit",
+          "strength": 5
+        },
+        "body": "A continuous vertical text scroll presents a personal diary of an English learner—describing career aspirations, overcoming fear of judgment with an AI teacher, building confidence, and achieving daily progress.",
+        "cta": {
+          "spoken": "none",
+          "button": "Install now",
+          "strengthNote": "Weak because the CTA is entirely text-only at the very end with no spoken encouragement or urgency."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "trial at ₹1",
+        "productFirstSeenSec": 55,
+        "brandFirstMentionSec": 12,
+        "captionsBurnedIn": true,
+        "targetAudience": "Indians looking to improve English fluency for career growth and social confidence",
+        "painPoint": "fear of judgment when speaking English and lack of a safe practice environment",
+        "desiredOutcome": "fluency, good job, higher salary, and pride for family",
+        "valueProposition": "15 minutes a day of judgment-free AI English practice that builds confidence affordably",
+        "creativeAngle": "Emotional first-person diary scroll",
+        "emotionalTrigger": "Hope and self-betterment",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "TOF",
+        "proofMechanism": "1 Crore+ people learn English",
+        "urgencyMechanism": "none",
+        "visualConcept": "A nearly minute-long continuous vertical scroll of text over a solid blue background, ending with a brief 3D phone mockup of the app.",
+        "patternInterrupt": "none",
+        "flags": {
+          "quantifiedOutcome": true,
+          "socialProof": true,
+          "urgency": false,
+          "comparison": false,
+          "objectionHandling": true,
+          "beforeAfter": false,
+          "customerStory": true,
+          "priceShown": true,
+          "productUiShown": true,
+          "humanFace": false
+        },
+        "scores": {
+          "hookScore": 4,
+          "clarityScore": 6,
+          "valuePropScore": 7,
+          "offerScore": 8,
+          "ctaScore": 3,
+          "specificityScore": 6,
+          "creativeAngleScore": 5,
+          "conversionIntentScore": 5,
+          "productVisibility": 3,
+          "textDensity": 8
+        },
+        "observed": [
+          "57-second video consisting almost entirely of scrolling text on a blue background",
+          "App UI and brand name MySivi appear only in the final two seconds",
+          "Pricing mention of ₹1 at the end",
+          "Instrumental background music plays throughout without voiceover"
+        ],
+        "inferred": [
+          "Likely relies on high reading engagement to convert viewers who watch the entire emotional narrative",
+          "Appears to target budget-conscious learners through the ₹1 trial hook"
+        ],
+        "whyItWorks": "The continuous diary-style text creates a hypnotic pacing that pulls emotional readers through the entire narrative.",
+        "weakness": "Extremely low product visibility; the app itself is hidden until the final seconds of a nearly one-minute video.",
+        "recommendation": "Cut the video down to 15 seconds, show the app UI in the first 3 seconds, and add a human voiceover reading the text."
+      }
+    },
+    {
+      "rank": 9,
+      "adId": "2525947104551219",
+      "pageName": "MySivi Spoken English App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=2525947104551219",
+      "libraryPosition": 4,
+      "startDate": "2026-09-20",
+      "daysActive": 16,
+      "durationS": 18,
+      "assetIds": [
+        "1026609013719895",
+        "1577501956859555"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 50.5,
+      "marketSignal": 65.3,
+      "marketParts": {
+        "impressionRank": 66.7,
+        "longevity": 53.3,
+        "distribution": 80
+      },
+      "adStrengthIndex": 54.9,
+      "quadrant": "Study this",
+      "cloneOf": [
+        "2805580133171301"
+      ],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish",
+        "format": "Video-call demo",
+        "talent": "real people",
+        "first3s": {
+          "visual": "A split-screen video call showing a young woman talking.",
+          "audioOrText": "Matlab ab main call nahi uthati toh kisi aur se baat karoge?"
+        },
+        "hook": {
+          "text": "Matlab ab main call nahi uthati toh kisi aur se baat karoge?",
+          "english": "Meaning if I don't pick up the call now, you'll talk to someone else?",
+          "type": "Question",
+          "strength": 6
+        },
+        "body": "The two speakers discuss how talking to strangers on a video call app feels a bit weird at first, but is a great way to practice English conversation instead of just scrolling Instagram.",
+        "cta": {
+          "spoken": "none",
+          "button": "Install now",
+          "strengthNote": "The button label is standard, but the video provides zero verbal or visual prompt to install during playback."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "₹1 trial",
+        "productFirstSeenSec": 16,
+        "brandFirstMentionSec": 16,
+        "captionsBurnedIn": true,
+        "targetAudience": "Young adults in India wanting to improve spoken English conversational skills",
+        "painPoint": "Hesitation and lack of conversational practice in English",
+        "desiredOutcome": "Fluency and confidence in English speaking",
+        "valueProposition": "Practice English conversation with real people on video calls to improve fluency naturally",
+        "creativeAngle": "Video-call demo / Peer conversation",
+        "emotionalTrigger": "Curiosity and relatability",
+        "awarenessLevel": "Solution-aware",
+        "funnelStage": "MOF",
+        "proofMechanism": "none",
+        "urgencyMechanism": "none",
+        "visualConcept": "A simulated 1-on-1 video call between two users discussing language practice",
+        "patternInterrupt": "Split-screen video call format mimicking a casual dating or social app UI",
+        "flags": {
+          "quantifiedOutcome": false,
+          "socialProof": false,
+          "urgency": false,
+          "comparison": false,
+          "objectionHandling": false,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": false,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 6,
+          "clarityScore": 5,
+          "valuePropScore": 6,
+          "offerScore": 4,
+          "ctaScore": 3,
+          "specificityScore": 4,
+          "creativeAngleScore": 7,
+          "conversionIntentScore": 4,
+          "productVisibility": 3,
+          "textDensity": 2
+        },
+        "observed": [
+          "Ad uses a split-screen video call format between a man and a woman.",
+          "Conversation is entirely in Hinglish about practicing English.",
+          "Burned-in white captions appear at the bottom for every spoken line.",
+          "Brand name 'MySivi' and app install screen only appear in the last two seconds.",
+          "Primary text mentions trial at ₹1/-."
+        ],
+        "inferred": [
+          "Likely designed to trick viewers into thinking it's a personal chat or relationship video before revealing the English learning angle.",
+          "Appears to target younger demographics accustomed to social video apps."
+        ],
+        "whyItWorks": "The opening hook uses a dramatic relationship-style question that temporarily stops the scroll before pivoting to language practice.",
+        "weakness": "The viewer has no idea it's an ad for an English learning app until the very last frame.",
+        "recommendation": "Introduce the MySivi brand logo or app UI earlier in the video or include an overlay banner hinting at English practice."
+      }
+    },
+    {
+      "rank": 10,
+      "adId": "2805580133171301",
+      "pageName": "MySivi Spoken English App",
+      "adLibraryUrl": "https://www.facebook.com/ads/library/?id=2805580133171301",
+      "libraryPosition": 7,
+      "startDate": "2026-09-20",
+      "daysActive": 16,
+      "durationS": 18,
+      "assetIds": [
+        "1634940148174088",
+        "2191598914730884"
+      ],
+      "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+      "body": "🌍 Speak English fluently with the power of AI! 🧠 Try MySivi for real progress. Start your trial now at just ₹1/-! 🔓💬\n🚀",
+      "cta": "Install now",
+      "language": "Hinglish",
+      "sameCopy": true,
+      "copyGroupSize": 7,
+      "analysisMode": "watched video",
+      "creativeScore": 56.5,
+      "marketSignal": 46.3,
+      "marketParts": {
+        "impressionRank": 33.3,
+        "longevity": 53.3,
+        "distribution": 68
+      },
+      "adStrengthIndex": 53.4,
+      "quadrant": "Retire",
+      "cloneOf": [
+        "2525947104551219"
+      ],
+      "analysis": {
+        "confidence": "high",
+        "language": "Hinglish",
+        "format": "Video-call demo",
+        "talent": "real people",
+        "first3s": {
+          "visual": "A young woman on a video call looking directly at the camera, speaking",
+          "audioOrText": "matlab ab main call nahi uthati toh kisi aur se baat karoge?"
+        },
+        "hook": {
+          "text": "matlab ab main call nahi uthati toh kisi aur se baat karoge?",
+          "english": "meaning if I don't pick up the call now, will you talk to someone else?",
+          "type": "Curiosity",
+          "strength": 7
+        },
+        "body": "A man and woman discuss how talking to new people on the app helps build English-speaking confidence.",
+        "cta": {
+          "spoken": "none",
+          "button": "Install now",
+          "strengthNote": "Relies entirely on text branding at the end with no spoken call-to-action."
+        },
+        "headline": "MySivi Se Shuru Karo – Sirf ₹1 Mein",
+        "offer": "₹1 trial",
+        "productFirstSeenSec": 16,
+        "brandFirstMentionSec": 16,
+        "captionsBurnedIn": true,
+        "targetAudience": "Young adults in India wanting to improve spoken English casually",
+        "painPoint": "Hesitation and lack of practice partners for English fluency",
+        "desiredOutcome": "Conversational English fluency through casual app chats",
+        "valueProposition": "Practice English by talking to different people on the app instead of awkward social situations",
+        "creativeAngle": "Video-call scenario leading into app discovery",
+        "emotionalTrigger": "Jealousy/Curiosity in relationship banter",
+        "awarenessLevel": "Problem-aware",
+        "funnelStage": "TOF",
+        "proofMechanism": "none",
+        "urgencyMechanism": "none",
+        "visualConcept": "Split-screen video call between two friends discussing app usage",
+        "patternInterrupt": "Relatable relationship banter opens the video",
+        "flags": {
+          "quantifiedOutcome": false,
+          "socialProof": false,
+          "urgency": false,
+          "comparison": false,
+          "objectionHandling": false,
+          "beforeAfter": false,
+          "customerStory": false,
+          "priceShown": false,
+          "productUiShown": true,
+          "humanFace": true
+        },
+        "scores": {
+          "hookScore": 7,
+          "clarityScore": 6,
+          "valuePropScore": 6,
+          "offerScore": 4,
+          "ctaScore": 4,
+          "specificityScore": 4,
+          "creativeAngleScore": 8,
+          "conversionIntentScore": 5,
+          "productVisibility": 3,
+          "textDensity": 2
+        },
+        "observed": [
+          "Video opens with a split-screen video call format between a man and a woman.",
+          "Conversation is in Hinglish about talking to other people when calls aren't answered.",
+          "Transition at 0:16 introduces MySivi app interface and download prompt.",
+          "Subtitles are burned into the video throughout the conversation."
+        ],
+        "inferred": [
+          "Likely targets young Indians comfortable with modern dating or friendship dynamics.",
+          "Appears to use a native-feeling social media skit to prevent drop-off."
+        ],
+        "whyItWorks": "The relationship banter hook immediately grabs attention before smoothly pivoting into the product utility.",
+        "weakness": "The app and brand name are hidden until the final two seconds of the video.",
+        "recommendation": "Introduce the app name or logo watermark earlier in the video so viewers connect the skit to the brand sooner."
+      }
+    }
+  ],
+  "aggregates": {
+    "n": 10,
+    "avgCreative": 72.6,
+    "avgMarket": 64.7,
+    "avgDims": {
+      "hookScore": 7.1,
+      "clarityScore": 7.4,
+      "valuePropScore": 7.5,
+      "offerScore": 7.8,
+      "ctaScore": 6.3,
+      "specificityScore": 6.7,
+      "creativeAngleScore": 7.9,
+      "conversionIntentScore": 6.9
+    },
+    "hookTypes": [
+      {
+        "label": "Curiosity",
+        "count": 4,
+        "share": 40
+      },
+      {
+        "label": "Question",
+        "count": 3,
+        "share": 30
+      },
+      {
+        "label": "Contrarian",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Problem",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Benefit",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "formats": [
+      {
+        "label": "AI-generated story",
+        "count": 5,
+        "share": 50
+      },
+      {
+        "label": "Video-call demo",
+        "count": 4,
+        "share": 40
+      },
+      {
+        "label": "Text-on-screen testimonial",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "talent": [
+      {
+        "label": "AI-generated characters",
+        "count": 5,
+        "share": 50
+      },
+      {
+        "label": "real people",
+        "count": 4,
+        "share": 40
+      },
+      {
+        "label": "none",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "spokenLanguages": [
+      {
+        "label": "Hinglish",
+        "count": 6,
+        "share": 60
+      },
+      {
+        "label": "Tamil",
+        "count": 2,
+        "share": 20
+      },
+      {
+        "label": "Kannada",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "English",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "angles": [
+      {
+        "label": "AI cinematic story driven dialogue",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Fictional AI skit leading into low-cost app trial",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Absurd sci-fi skit introducing a real-world language barrier",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "AI character correcting everyday English mistakes in surreal scenarios",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "AI-human buddy skit introducing app solution",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Relatable relationship banter leading to app discovery",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Live practice session leading into low-cost AI app pitch",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Emotional first-person diary scroll",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Video-call demo / Peer conversation",
+        "count": 1,
+        "share": 10
+      },
+      {
+        "label": "Video-call scenario leading into app discovery",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "awareness": [
+      {
+        "label": "Problem-aware",
+        "count": 7,
+        "share": 70
+      },
+      {
+        "label": "Solution-aware",
+        "count": 3,
+        "share": 30
+      }
+    ],
+    "funnel": [
+      {
+        "label": "MOF",
+        "count": 6,
+        "share": 60
+      },
+      {
+        "label": "TOF",
+        "count": 4,
+        "share": 40
+      }
+    ],
+    "ctaButtons": [
+      {
+        "label": "Install now",
+        "count": 10,
+        "share": 100
+      }
+    ],
+    "spokenCtaNone": 4,
+    "offers": [
+      {
+        "label": "₹1 entry offer",
+        "count": 9,
+        "share": 90
+      },
+      {
+        "label": "1 Rupee trial offer",
+        "count": 1,
+        "share": 10
+      }
+    ],
+    "medianProductSec": 16,
+    "medianBrandSec": 14,
+    "captionsShare": 90,
+    "flags": {
+      "quantifiedOutcome": 5,
+      "socialProof": 8,
+      "urgency": 5,
+      "comparison": 2,
+      "objectionHandling": 5,
+      "beforeAfter": 0,
+      "customerStory": 1,
+      "priceShown": 8,
+      "productUiShown": 10,
+      "humanFace": 6
+    },
+    "medianDuration": 30,
+    "cloneGroups": [
+      [
+        "946551737840774",
+        "936537375615758"
+      ],
+      [
+        "2525947104551219",
+        "2805580133171301"
+      ]
+    ],
+    "quadrants": [
+      {
+        "label": "Proven winner",
+        "count": 3,
+        "share": 30
+      },
+      {
+        "label": "Retire",
+        "count": 3,
+        "share": 30
+      },
+      {
+        "label": "Hidden gem",
+        "count": 2,
+        "share": 20
+      },
+      {
+        "label": "Study this",
+        "count": 2,
+        "share": 20
+      }
+    ],
+    "analysisModes": [
+      {
+        "label": "watched video",
+        "count": 10,
+        "share": 100
+      }
+    ]
+  },
+  "gapCandidates": [
+    {
+      "key": "beforeAfter",
+      "severity": 1,
+      "title": "None of the 10 ads use a before -> after transformation",
+      "count": 0,
+      "n": 10,
+      "examples": []
+    },
+    {
+      "key": "customerStory",
+      "severity": 0.9,
+      "title": "Only 1 of 10 ads use a real learner story",
+      "count": 1,
+      "n": 10,
+      "examples": [
+        "1083327227503975"
+      ]
+    },
+    {
+      "key": "comparison",
+      "severity": 0.8,
+      "title": "Only 2 of 10 ads use a comparison against the alternative (tutor, coaching class, YouTube)",
+      "count": 2,
+      "n": 10,
+      "examples": [
+        "1602224664840152",
+        "2585720485217637"
+      ]
+    },
+    {
+      "key": "lateProduct",
+      "severity": 0.8,
+      "title": "The product shows up late: median first appearance at 16s",
+      "count": null,
+      "n": 10
+    },
+    {
+      "key": "ctaMonoculture",
+      "severity": 0.7,
+      "title": "All 10 ads end on the same button: \"Install now\"",
+      "count": 10,
+      "n": 10
+    },
+    {
+      "key": "offerMonoculture",
+      "severity": 0.6,
+      "title": "9 of 10 ads lean on one offer (\"₹1 entry offer\") with no offer ladder",
+      "count": 9,
+      "n": 10
+    },
+    {
+      "key": "languageCoverage",
+      "severity": 0.5,
+      "title": "Sample covers Hinglish, Tamil, Kannada; nothing in Telugu, Bengali, Marathi",
+      "count": 3,
+      "n": 10,
+      "note": "Within the sampled top ads only - the full library may differ."
+    }
+  ],
+  "strategy": {
+    "headline": "MySivi scales 917 active ads by pairing cinematic AI-generated skits with a low-friction ₹1 trial offer.",
+    "executiveSummary": [
+      "917 active ads are currently live across five distinct Facebook pages",
+      "10 out of 10 sampled ads utilize Dynamic Creative to optimize delivery",
+      "8 out of 10 ads explicitly display the ₹1 price point on-screen",
+      "16 seconds is the median time for the first product UI appearance"
+    ],
+    "winnerWhy": [
+      {
+        "point": "High hook engagement",
+        "evidence": "Ad 946551737840774 achieves a hook score of 8/10 with its mountain biking visual"
+      },
+      {
+        "point": "Strong price anchoring",
+        "evidence": "The ₹1 trial offer is explicitly shown on screen and mentioned in the spoken CTA"
+      },
+      {
+        "point": "Social proof integration",
+        "evidence": "Visual overlays highlight 10M+ downloads and a 4.6-star rating"
+      }
+    ],
+    "winnerSteal": [
+      "Cinematic AI-generated scenarios to bridge surreal hooks into product utility",
+      "₹1 entry offer to minimize conversion friction in the initial trial phase",
+      "Localized Hinglish dialogue that mirrors natural peer-to-peer conversation"
+    ],
+    "hookTakeaway": "Curiosity hooks score highest in our framework, with ad 3045760135765697 reaching a 9/10. Surreal AI-generated scenarios outperform standard benefit hooks in capturing initial attention.",
+    "ctaTakeaway": "All 10 sampled ads end with an 'Install now' button. Spoken CTAs like 'Abhi MySivi download karo' provide direct instructions in 7 out of 10 creatives.",
+    "patterns": [
+      {
+        "title": "AI Storytelling",
+        "insight": "Half of the portfolio uses AI-generated characters in high-stakes or surreal skits",
+        "evidence": "5 out of 10 ads are categorized as AI-generated stories"
+      },
+      {
+        "title": "Price Transparency",
+        "insight": "The ₹1 offer is the primary driver of the creative value proposition",
+        "evidence": "8 out of 10 ads show the price on screen"
+      },
+      {
+        "title": "Late Product Entry",
+        "insight": "Creative leads with narrative, often delaying the product reveal until the second half",
+        "evidence": "Median product reveal is 16s across the sample"
+      },
+      {
+        "title": "Regional Localization",
+        "insight": "The advertiser targets specific linguistic markets with dedicated creative assets",
+        "evidence": "Sample includes ads in Hinglish, Tamil, and Kannada"
+      }
+    ],
+    "gaps": [
+      {
+        "title": "Missing Transformation Proof",
+        "evidence": "0 out of 10 ads use a before-and-after visual format",
+        "whyItMatters": "Users cannot visualize the specific skill improvement they are buying",
+        "opportunity": "Test a split-screen showing broken English vs. fluent English using the same prompt"
+      },
+      {
+        "title": "Lack of Peer Validation",
+        "evidence": "Only 1 out of 10 ads features a real learner story",
+        "whyItMatters": "AI characters can feel uncanny and reduce trust in educational outcomes",
+        "opportunity": "Source 15-second selfie testimonials from actual users"
+      },
+      {
+        "title": "Slow Product Identification",
+        "evidence": "Median product reveal is 16s; ad 1083327227503975 waits until 55s",
+        "whyItMatters": "Feed users drop off before seeing the app interface",
+        "opportunity": "Insert a 2-second UI pop-up within the first 5 seconds of every skit"
+      },
+      {
+        "title": "Untapped Regional Markets",
+        "evidence": "Sample lacks Telugu, Bengali, and Marathi creatives",
+        "whyItMatters": "These represent high-volume segments for English learning apps in India",
+        "opportunity": "Localize existing winning AI scripts into Telugu and Bengali"
+      }
+    ],
+    "concepts": [
+      {
+        "name": "The Interview Transformation",
+        "exploitsGap": "None of the 10 ads use a before -> after transformation",
+        "format": "Split-screen Video",
+        "hook": "English ki wajah se rejection? Ab aur nahi.",
+        "hookEnglish": "Rejection because of English? No more.",
+        "angle": "Career growth through fluency",
+        "script": [
+          "0-3s: Split screen. Left side: Nervous candidate stuttering. Right side: Confident candidate speaking.",
+          "3-10s: Close up of MySivi app interface showing a 5-minute practice session.",
+          "10-20s: Right side candidate gets the job offer. Text: 3 din practice, ₹1 trial.",
+          "20-25s: Logo and Install Now button."
+        ],
+        "caption": "Sirf ₹1 mein apni English sudharein aur career badhayein. Install now.",
+        "cta": "Install Now",
+        "whyItCouldWork": "Directly addresses the primary pain point of professional rejection.",
+        "successMetric": "CTR",
+        "killCriteria": "Hook rate below 20%"
+      },
+      {
+        "name": "The Coaching Class Comparison",
+        "exploitsGap": "Only 2 of 10 ads use a comparison against alternatives",
+        "format": "Text-overlay Video",
+        "hook": "Coaching class-ku 5000 yen selavu panreenga?",
+        "hookEnglish": "Why spend 5000 on coaching classes?",
+        "angle": "Cost-efficiency vs traditional methods",
+        "script": [
+          "0-3s: Person looking at a high-priced coaching bill vs. MySivi app on phone.",
+          "3-10s: Fast-cut demo of the AI conversation feature in Tamil interface.",
+          "10-20s: Text: No travel, no high fees. Just ₹1 for 3 days.",
+          "20-25s: CTA screen with 10M+ download badge."
+        ],
+        "caption": "English pesa kathuka coaching class thevai illai. MySivi iruku. Trial for ₹1.",
+        "cta": "Install Now",
+        "whyItCouldWork": "Uses price anchoring to make the ₹1 trial feel like an obvious choice.",
+        "successMetric": "Cost Per Install",
+        "killCriteria": "CPI higher than 2x current average"
+      },
+      {
+        "name": "The 3-Second UI Reveal",
+        "exploitsGap": "Median product reveal at 16s",
+        "format": "UI-First Demo",
+        "hook": "Ee app tho English matladadam chala easy.",
+        "hookEnglish": "Speaking English is very easy with this app.",
+        "angle": "Immediate product utility",
+        "script": [
+          "0-3s: Phone screen showing the 'Start Speaking' button being pressed.",
+          "3-10s: Real-time AI voice interaction demo in Telugu.",
+          "10-20s: Quick montage of different lesson topics (Office, Travel, Friends).",
+          "20-25s: ₹1 offer sticker and Install Now."
+        ],
+        "caption": "Telugu lo English nerchukondi. ₹1 trial offer limited time matrame.",
+        "cta": "Install Now",
+        "whyItCouldWork": "Solves the late product reveal issue by showing the app immediately.",
+        "successMetric": "Conversion Rate",
+        "killCriteria": "Drop-off rate at 3s higher than 60%"
+      }
+    ],
+    "recommendations": [
+      {
+        "action": "Front-load product UI",
+        "why": "The 16s median reveal is too slow for feed placements where users scroll quickly",
+        "effort": "Low",
+        "impact": "High"
+      },
+      {
+        "action": "Test before-and-after creative",
+        "why": "Current ads focus on the process but ignore the visual proof of the result",
+        "effort": "Med",
+        "impact": "High"
+      },
+      {
+        "action": "Expand to Telugu and Bengali",
+        "why": "The current sample is limited to three languages despite a massive 917 ad portfolio",
+        "effort": "Med",
+        "impact": "High"
+      },
+      {
+        "action": "Introduce a real user testimonial track",
+        "why": "Only 1/10 ads uses a real story; human faces increase trust over AI characters",
+        "effort": "High",
+        "impact": "Med"
+      }
+    ]
+  },
+  "strategySource": "gemini",
+  "unscored": []
+}

@@ -1,0 +1,82 @@
+{
+  "brand": "Duolingo",
+  "adsScored": 5,
+  "winner": {
+    "adId": "1358473513046877",
+    "adStrengthIndex": 79.8,
+    "creativeScore": 74.5,
+    "marketSignal": 92,
+    "hook": {
+      "text": "learn a language with 10 minutes per day",
+      "english": "learn a language with 10 minutes per day",
+      "type": "Benefit",
+      "strength": 7
+    },
+    "cta": {
+      "spoken": "none",
+      "button": "LEARN FOR FREE",
+      "strengthNote": "Clear low-friction button with strong value word 'free'"
+    },
+    "body": "Presents Duolingo as the world's number one learning app for free language education with interactive lessons.",
+    "adLibraryUrl": "https://www.facebook.com/ads/library/?id=1358473513046877"
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "adId": "1358473513046877",
+      "index": 79.8,
+      "creative": 74.5,
+      "market": 92,
+      "quadrant": "Proven winner",
+      "hookType": "Benefit",
+      "hook": "learn a language with 10 minutes per day"
+    },
+    {
+      "rank": 2,
+      "adId": "2222173525022786",
+      "index": 66.3,
+      "creative": 66,
+      "market": 67,
+      "quadrant": "Proven winner",
+      "hookType": "Curiosity",
+      "hook": "If you win, I'll eat my mustache."
+    },
+    {
+      "rank": 3,
+      "adId": "872722692089728",
+      "index": 65.5,
+      "creative": 59.5,
+      "market": 79.5,
+      "quadrant": "Proven winner",
+      "hookType": "Benefit",
+      "hook": "I've been learning Spanish on Duolingo, for free."
+    },
+    {
+      "rank": 4,
+      "adId": "1364532395612949",
+      "index": 57.3,
+      "creative": 58.5,
+      "market": 54.5,
+      "quadrant": "Retire",
+      "hookType": "Question",
+      "hook": "ready to finally learn chess?"
+    },
+    {
+      "rank": 5,
+      "adId": "1021191287536143",
+      "index": 53.6,
+      "creative": 58.5,
+      "market": 42,
+      "quadrant": "Retire",
+      "hookType": "Benefit",
+      "hook": "Start building your language fluency"
+    }
+  ],
+  "gaps": [
+    "Zero Quantified Outcomes",
+    "No Regional Language Creatives",
+    "Absence of Competitor Comparison",
+    "Lack of Objection Handling"
+  ],
+  "strategySource": "gemini"
+}

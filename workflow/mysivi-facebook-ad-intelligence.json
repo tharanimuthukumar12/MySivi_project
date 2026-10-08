@@ -1,0 +1,1153 @@
+{
+  "name": "Ad Library Teardown — Facebook Ad Intelligence",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Ad Library Teardown",
+        "formDescription": "Paste a Meta Ad Library search or page link. The workflow scrapes the top running ads, watches each creative with Gemini, scores them in code and returns a PDF report. Allow about 30 seconds per ad.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Ad Library URL",
+              "placeholder": "https://www.facebook.com/ads/library/?active_status=active&...",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Brand / competitor name",
+              "placeholder": "MySivi"
+            },
+            {
+              "fieldLabel": "Ads to analyse (3-15)",
+              "fieldType": "number",
+              "defaultValue": "8"
+            },
+            {
+              "fieldLabel": "Prepared by",
+              "placeholder": "Your name (printed on the cover)"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Run teardown"
+        }
+      },
+      "id": "c55e92e2-9b33-4d6f-91f6-82e45ea8f87e",
+      "name": "01 — Ad Library URL",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "efcdeffb-b42b-41b9-8295-fc10adb5c29a"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Accepts form or webhook-shaped input, validates the Ad Library link and\n// extracts the search context we need later (sort mode decides whether the\n// \"impression rank\" market signal is trustworthy).\nconst APIFY_ACTOR = 'curious_coder~facebook-ads-library-scraper'; // swap scraper here\nconst MIN_ADS = 3;\nconst MAX_ADS = 15;\n\n// n8n's Code sandbox has no URL global, so links are parsed by hand.\nconst safeDecode = (x) => { try { return decodeURIComponent(x); } catch (e) { return x; } };\nconst parseUrl = (s) => {\n  const m = String(s || '').trim().match(/^(https?):\\/\\/([^/?#]+)([^?#]*)(\\?[^#]*)?/i);\n  if (!m) return null;\n  const pairs = (m[4] || '').slice(1).split('&').filter(Boolean).map((kv) => {\n    const i = kv.indexOf('=');\n    return [safeDecode(i === -1 ? kv : kv.slice(0, i)), i === -1 ? '' : safeDecode(kv.slice(i + 1)), kv];\n  });\n  return {\n    origin: `${m[1].toLowerCase()}://${m[2].toLowerCase()}`,\n    hostname: m[2].toLowerCase().replace(/:\\d+$/, ''),\n    pathname: m[3] || '/',\n    pairs,\n    get: (k) => { const hit = pairs.find((p) => p[0] === k); return hit ? hit[1] : null; },\n  };\n};\n\nconst input = $input.first().json;\nconst body = input.body || {};\nconst field = (...keys) => keys.map((k) => input[k] ?? body[k]).find((v) => v !== undefined && v !== null && v !== '');\nconst raw = String(field('adLibraryUrl', 'Ad Library URL') ?? '').trim();\nconst brandIn = String(field('brand', 'Brand / competitor name') ?? '').trim();\nconst preparedBy = String(field('preparedBy', 'Prepared by') ?? '').trim();\nlet maxAds = parseInt(field('maxAds', 'Ads to analyse (3-15)') ?? 8, 10);\nif (!Number.isFinite(maxAds)) maxAds = 8;\nmaxAds = Math.min(Math.max(maxAds, MIN_ADS), MAX_ADS);\n\nconst reject = (reason) => [{ json: { valid: false, error: 'Invalid Facebook Ad Library URL.', reason, receivedUrl: raw } }];\n\nconst u = parseUrl(raw);\nif (!u) return reject('That is not a web link.');\nconst host = u.hostname.replace(/^(www|m|web|business)\\./, '');\nif (host !== 'facebook.com' || !u.pathname.startsWith('/ads/library')) {\n  return reject('Expected a facebook.com/ads/library/ link.');\n}\nconst p = u;\nconst q = (p.get('q') || '').replace(/\\+/g, ' ').replace(/^\"+|\"+$/g, '').trim();\nconst pageId = p.get('view_all_page_id');\nconst adId = p.get('id');\n// A ?id= link opens one ad; the scraper needs a search or a page to list ads from.\nif (adId && !q && !pageId) return reject(`That link opens a single ad (id ${adId}). Paste a search link instead, e.g. https://www.facebook.com/ads/library/?active_status=active&country=IN&q=MySivi&sort_data[mode]=total_impressions`);\nif (!q && !pageId) return reject('The link has no search keyword or page id.');\n\nconst sortMode = p.get('sort_data[mode]') || '';\nconst country = (p.get('country') || 'ALL').toUpperCase();\n\nreturn [{\n  json: {\n    valid: true,\n    adLibraryUrl: raw,\n    apifyActor: APIFY_ACTOR,\n    maxAds,\n    fetchCount: Math.max(10, maxAds + 5), // actor minimum is 10; headroom for dedupe\n    country,\n    query: q,\n    pageId: pageId || null,\n    adId: adId || null,\n    activeStatus: p.get('active_status') || 'all',\n    searchType: p.get('search_type') || '',\n    sortMode: sortMode || 'relevance',\n    impressionSorted: sortMode === 'total_impressions',\n    brand: brandIn || q || (pageId ? `Page ${pageId}` : 'Advertiser'),\n    preparedBy,\n    runStartedAt: new Date().toISOString(),\n  },\n}];\n"
+      },
+      "id": "ff4594dc-d21a-4eda-93dc-d8901e05ca41",
+      "name": "02 — Validate & Parse URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "id": "09091e06-58b0-4a6f-8e3e-fe78888e4c29"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3d2f40fa-db44-4c0b-862b-db9badf71039",
+      "name": "03 — URL Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/{{ $json.apifyActor }}/run-sync-get-dataset-items?timeout=170",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ urls: [{ url: $json.adLibraryUrl }], count: $json.fetchCount, limitPerSource: $json.fetchCount, scrapeAdDetails: false, \"scrapePageAds.activeStatus\": \"active\", \"scrapePageAds.countryCode\": $json.country }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "raw"
+            }
+          },
+          "timeout": 180000
+        }
+      },
+      "id": "b07a1c27-919f-41e8-a154-6b37beb78ca1",
+      "name": "04 — Scrape Ad Library (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turns whatever the scraper returned into one clean schema per ad.\n// Handles snake_case (curious_coder) and camelCase actor outputs, removes\n// exact duplicates, flags shared copy, and decodes the video asset id +\n// duration that Meta embeds in the CDN url (that is how we tell 15 ads\n// with identical captions apart).\nconst cfg = $('02 — Validate & Parse URL').first().json;\n\n// n8n's Code sandbox has no URL global, so links are parsed by hand.\nconst safeDecode = (x) => { try { return decodeURIComponent(x); } catch (e) { return x; } };\nconst parseUrl = (s) => {\n  const m = String(s || '').trim().match(/^(https?):\\/\\/([^/?#]+)([^?#]*)(\\?[^#]*)?/i);\n  if (!m) return null;\n  const pairs = (m[4] || '').slice(1).split('&').filter(Boolean).map((kv) => {\n    const i = kv.indexOf('=');\n    return [safeDecode(i === -1 ? kv : kv.slice(0, i)), i === -1 ? '' : safeDecode(kv.slice(i + 1)), kv];\n  });\n  return {\n    origin: `${m[1].toLowerCase()}://${m[2].toLowerCase()}`,\n    hostname: m[2].toLowerCase().replace(/:\\d+$/, ''),\n    pathname: m[3] || '/',\n    pairs,\n    get: (k) => { const hit = pairs.find((p) => p[0] === k); return hit ? hit[1] : null; },\n  };\n};\n\nconst ZW = /[​-‍﻿]/g;\nconst decodeEntities = (s) => s\n  .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '\"')\n  .replace(/&#39;|&apos;/g, \"'\").replace(/&lt;/g, '<').replace(/&gt;/g, '>');\nconst clean = (v) => {\n  if (v == null) return '';\n  if (typeof v === 'object') v = v.text ?? '';\n  return decodeEntities(String(v))\n    .replace(/<[^>]+>/g, ' ')\n    .replace(ZW, '')\n    .replace(/�/g, '')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\s*\\n\\s*/g, '\\n')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n};\nconst isTemplate = (s) => /\\{\\{\\s*[\\w.]+\\s*\\}\\}/.test(String(s || ''));\nconst pick = (...vals) => vals.map(clean).find((v) => v && !isTemplate(v)) || '';\n\nconst TRACKING = /^(utm_|fbclid|gclid|igshid|mc_|ref$|referrer$|_branch|campaign|adset|ad_id|af_)/i;\nconst cleanUrl = (url) => {\n  const x = parseUrl(String(url || '').replace(/^http:\\/\\//i, 'https://'));\n  if (!x) return String(url || '');\n  const kept = x.pairs.filter(([k]) => !TRACKING.test(k)).map((p) => p[2]);\n  return `${x.origin}${x.pathname}${kept.length ? `?${kept.join('&')}` : ''}`;\n};\n\n// Meta CDN video urls carry base64 JSON in `efg` with the asset id and duration.\nconst B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';\nconst b64decode = (str) => {\n  let bits = 0; let val = 0; let out = '';\n  for (const ch of str.replace(/-/g, '+').replace(/_/g, '/').replace(/[^A-Za-z0-9+/]/g, '')) {\n    val = ((val << 6) | B64.indexOf(ch)) & 0xffffff; bits += 6;\n    if (bits >= 8) { bits -= 8; out += String.fromCharCode((val >> bits) & 255); }\n  }\n  return out;\n};\nconst decodeEfg = (url) => {\n  try {\n    const x = parseUrl(url);\n    const efg = x && x.get('efg');\n    if (!efg) return {};\n    const j = JSON.parse(b64decode(efg));\n    return { assetId: j.xpv_asset_id ? String(j.xpv_asset_id) : null, durationS: j.duration_s ?? null };\n  } catch (e) { return {}; }\n};\n\nconst SCRIPTS = [\n  [/[஀-௿]/, 'Tamil'], [/[ಀ-೿]/, 'Kannada'], [/[ఀ-౿]/, 'Telugu'],\n  [/[ഀ-ൿ]/, 'Malayalam'], [/[ঀ-৿]/, 'Bengali'], [/[઀-૿]/, 'Gujarati'],\n  [/[਀-੿]/, 'Punjabi'], [/[଀-୿]/, 'Odia'], [/[ऀ-ॿ]/, 'Hindi'],\n];\nconst HINGLISH = /\\b(karo|kare|karein|sirf|mein|hai|hain|se|shuru|aap|apni|apna|bolo|seekho|sikho|kya|nahi|abhi|ab)\\b/i;\nconst detectLanguage = (text) => {\n  const hit = SCRIPTS.find(([re]) => re.test(text));\n  if (hit) return hit[1];\n  if (HINGLISH.test(text)) return 'Hinglish';\n  return text ? 'English' : 'Unknown';\n};\n\nconst hash = (s) => {\n  let h = 5381;\n  for (const ch of String(s)) h = ((h << 5) + h + ch.codePointAt(0)) >>> 0;\n  return h.toString(36);\n};\nconst copyKey = (s) => String(s).toLowerCase().replace(/#\\w+/g, '').replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();\n\n// Node 04 returns the whole Apify response as one text item, so the success\n// path always runs exactly once (empty list and actor errors included).\nconst rows = [];\n$input.all().forEach(({ json: j }) => {\n  if (typeof j.raw === 'string') {\n    try { const p = JSON.parse(j.raw); rows.push(...(Array.isArray(p) ? p : [p])); } catch (e) { rows.push({ error: 'Scraper returned non-JSON output' }); }\n  } else rows.push(j);\n});\nconst scraperError = (rows.find((j) => j && j.error) || {}).error || null;\nconst rawItems = rows.filter((j) => j && (j.ad_archive_id || j.adArchiveID || j.adArchiveId || j.adId));\n\nconst nowMs = Date.now();\nconst seenIds = new Set();\nconst seenAssets = new Map();\nconst ads = [];\nconst duplicates = [];\nlet reportedTotal = null;\n\nrawItems.forEach((r, idx) => {\n  const s = r.snapshot || r.adSnapshot || {};\n  const cards = Array.isArray(s.cards) ? s.cards : [];\n  const firstCard = cards[0] || {};\n  const adId = String(r.ad_archive_id || r.adArchiveID || r.adArchiveId || r.adId);\n  if (Number.isFinite(r.total)) reportedTotal = Math.max(reportedTotal || 0, r.total);\n\n  const videos = [...(s.videos || []), ...cards.filter((c) => c.video_sd_url || c.video_hd_url)];\n  const images = [...(s.images || []), ...cards.filter((c) => c.original_image_url || c.resized_image_url)];\n  const v0 = videos[0];\n  const videoUrl = v0 ? (v0.video_sd_url || v0.video_hd_url) : (r.videoUrl || '');\n  const imageUrl = (v0 && v0.video_preview_image_url) || (images[0] && (images[0].original_image_url || images[0].resized_image_url)) || r.imageUrl || '';\n  const assetIds = [...new Set(videos.map((v) => decodeEfg(v.video_sd_url || v.video_hd_url).assetId).filter(Boolean))].sort();\n  const durationS = videoUrl ? (decodeEfg(videoUrl).durationS ?? null) : null;\n\n  const headline = pick(s.title, firstCard.title, r.title, r.headline);\n  const body = pick(s.body, firstCard.body, r.body, r.adText, r.primaryText);\n  const linkDescription = pick(s.link_description, firstCard.link_description);\n  const cta = pick(s.cta_text, firstCard.cta_text, r.ctaText, r.cta) || 'None';\n  const templateLeak = [s.title, s.body && s.body.text, s.link_description].some(isTemplate);\n  const hashtags = (body.match(/#[\\p{L}\\p{N}_]+/gu) || []);\n  const bodyNoTags = clean(body.replace(/#[\\p{L}\\p{N}_]+/gu, ' ')).replace(/ +\\n/g, '\\n').replace(/\\n +/g, '\\n');\n\n  const startSec = r.start_date || (r.startDate ? Date.parse(r.startDate) / 1000 : null)\n    || (r.start_date_formatted ? Date.parse(r.start_date_formatted.replace(' ', 'T') + 'Z') / 1000 : null);\n  const daysActive = startSec ? Math.max(0, Math.round((nowMs - startSec * 1000) / 86400000)) : null;\n  const platforms = (r.publisher_platform || r.publisherPlatform || r.platforms || []).map((x) => String(x).toLowerCase());\n  const linkUrl = cleanUrl(s.link_url || firstCard.link_url || r.linkUrl);\n\n  // Exact duplicates: same ad id, or the exact same set of creative assets.\n  const assetKey = assetIds.join('|');\n  if (seenIds.has(adId)) { duplicates.push({ adId, reason: 'same ad id' }); return; }\n  if (assetKey && seenAssets.has(assetKey)) { duplicates.push({ adId, reason: 'same creative assets', duplicateOf: seenAssets.get(assetKey) }); return; }\n  seenIds.add(adId);\n  if (assetKey) seenAssets.set(assetKey, adId);\n\n  ads.push({\n    adId,\n    pageName: clean(r.page_name || s.page_name || r.pageName),\n    pageId: String(r.page_id || s.page_id || r.pageId || ''),\n    adLibraryUrl: r.ad_library_url || `https://www.facebook.com/ads/library/?id=${adId}`,\n    libraryPosition: Number(r.position) || idx + 1,\n    startDate: startSec ? new Date(startSec * 1000).toISOString().slice(0, 10) : null,\n    daysActive,\n    platforms,\n    displayFormat: s.display_format || r.displayFormat || '',\n    variantCount: Math.max(cards.length, videos.length, images.length, 1),\n    mediaType: videoUrl ? 'video' : imageUrl ? 'image' : 'text',\n    videoUrl,\n    imageUrl,\n    assetIds,\n    durationS,\n    headline,\n    body: bodyNoTags,\n    hashtags,\n    linkDescription,\n    linkUrl,\n    linkDomain: ((parseUrl(linkUrl) || {}).hostname || '').replace(/^www\\./, ''),\n    cta,\n    language: detectLanguage(`${headline} ${body}`),\n    templateLeak,\n    copyFingerprint: hash(copyKey(`${headline}|${bodyNoTags}`)),\n    rawData: r,\n  });\n});\n\nif (!ads.length) {\n  return [{ json: { noAds: true, message: 'No ads were found for this query.', scraperError, scrapedRows: rawItems.length } }];\n}\n\nconst sample = ads.slice(0, cfg.maxAds);\nconst copyGroups = {};\nsample.forEach((a) => { copyGroups[a.copyFingerprint] = (copyGroups[a.copyFingerprint] || 0) + 1; });\nsample.forEach((a) => { a.copyGroupSize = copyGroups[a.copyFingerprint]; a.sameCopy = a.copyGroupSize > 1; });\n\nconst uniq = (arr) => [...new Set(arr.filter(Boolean))];\nconst portfolio = {\n  scrapedRows: rawItems.length,\n  duplicatesRemoved: duplicates.length,\n  duplicates,\n  sampleSize: sample.length,\n  reportedActiveAds: reportedTotal,\n  pages: uniq(sample.map((a) => a.pageName)),\n  uniqueCaptions: Object.keys(copyGroups).length,\n  uniqueCreatives: uniq(sample.map((a) => a.assetIds.join('|') || a.videoUrl || a.imageUrl || a.adId)).length,\n  mediaMix: sample.reduce((m, a) => ({ ...m, [a.mediaType]: (m[a.mediaType] || 0) + 1 }), {}),\n  dcoShare: sample.filter((a) => a.displayFormat === 'DCO').length,\n  templateLeaks: sample.filter((a) => a.templateLeak).map((a) => a.adId),\n  captionLanguages: uniq(sample.map((a) => a.language)),\n  platforms: uniq(sample.flatMap((a) => a.platforms)),\n  destinations: sample.reduce((m, a) => ({ ...m, [a.linkDomain || 'none']: (m[a.linkDomain || 'none'] || 0) + 1 }), {}),\n  ctaButtons: uniq(sample.map((a) => a.cta)),\n  oldestStart: sample.map((a) => a.startDate).filter(Boolean).sort()[0] || null,\n  newestStart: sample.map((a) => a.startDate).filter(Boolean).sort().slice(-1)[0] || null,\n};\n\nreturn sample.map((a, i) => ({ json: { ...a, sampleIndex: i + 1, portfolio } }));\n"
+      },
+      "id": "1f111a5a-96fa-4a9f-bcb3-91a27248d5c9",
+      "name": "05 — Normalize, Clean & Fingerprint",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.noAds === true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "id": "bfcbfa2e-828b-4ebb-ad78-6489bfbdf4c5"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2fa6ba8f-c1fb-4b74-b298-627dd8b6cfc6",
+      "name": "06 — Ads Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deterministic scoring. Gemini only supplies 0-10 sub-scores and flags;\n// every weight, rank and gap below is computed here so the same inputs\n// always produce the same winner.\nconst CREATIVE_WEIGHTS = {\n  hookScore: 0.20, clarityScore: 0.15, valuePropScore: 0.15, offerScore: 0.15,\n  ctaScore: 0.10, specificityScore: 0.10, creativeAngleScore: 0.10, conversionIntentScore: 0.05,\n};\nconst MARKET_WEIGHTS = { impressionRank: 0.5, longevity: 0.3, distribution: 0.2 };\nconst BLEND = { creative: 0.7, market: 0.3 };\nconst LONGEVITY_FULL_DAYS = 30;\n\nconst cfg = $('02 — Validate & Parse URL').first().json;\nconst portfolio = $('05 — Normalize, Clean & Fingerprint').first().json.portfolio;\nconst all = $input.all().map((i) => i.json);\nconst scored = all.filter((a) => a.analysis);\nconst unscored = all.filter((a) => !a.analysis).map((a) => ({ adId: a.adId, reason: a.aiError || 'analysis failed' }));\nconst N = scored.length;\n\nconst r1 = (x) => (x == null ? null : Math.round(x * 10) / 10);\nconst median = (xs) => {\n  const v = xs.filter((x) => x != null).sort((a, b) => a - b);\n  if (!v.length) return null;\n  const m = Math.floor(v.length / 2);\n  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;\n};\nconst avg = (xs) => { const v = xs.filter((x) => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };\nconst countBy = (xs) => xs.reduce((m, x) => { const k = x || 'n/a'; m[k] = (m[k] || 0) + 1; return m; }, {});\nconst sortedCounts = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([label, count]) => ({ label, count, share: N ? Math.round((count / N) * 100) : 0 }));\nconst norm = (s) => String(s || '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();\nconst primaryLanguage = (l) => String(l || 'n/a').split(/[,(/&]| and /)[0].trim() || 'n/a';\nconst offerLabel = (o) => {\n  const t = String(o || '');\n  if (/^(none|not observed)/i.test(t)) return 'No offer shown';\n  const price = t.match(/(₹|rs\\.?|inr)\\s?\\d+/i);\n  return price ? `${price[0].replace(/\\s+/g, '').replace(/^(rs\\.?|inr)/i, '₹')} entry offer` : t.slice(0, 40);\n};\n\n// 1) Creative score (0-100) from the rubric.\nscored.forEach((a) => {\n  const s = a.analysis.scores;\n  let total = 0;\n  const imputed = [];\n  Object.entries(CREATIVE_WEIGHTS).forEach(([k, w]) => {\n    let v = s[k];\n    if (v == null) { v = 5; imputed.push(k); }\n    total += v * w * 10;\n  });\n  a.creativeScore = r1(total);\n  a.imputedScores = imputed;\n});\n\n// 2) Creative clones: the same video re-uploaded under another ad id. Only ads\n//    whose video was actually watched are compared. Two match when durations are\n//    equal and the opening line agrees in the original language or in English\n//    (Gemini's transliteration varies).\nconst lineKey = (t) => { const k = norm(t).slice(0, 16); return k && k !== 'not observed' ? k : null; };\nconst parent = Object.fromEntries(scored.map((a) => [a.adId, a.adId]));\nconst root = (id) => (parent[id] === id ? id : (parent[id] = root(parent[id])));\nscored.forEach((a, i) => scored.slice(i + 1).forEach((b) => {\n  if (a.analysisMode !== 'watched video' || b.analysisMode !== 'watched video') return;\n  if (a.durationS == null || a.durationS !== b.durationS) return;\n  const sameLine = [['text', 'text'], ['english', 'english']].some(([x, y]) => {\n    const ka = lineKey(a.analysis.hook[x]); return ka && ka === lineKey(b.analysis.hook[y]);\n  });\n  if (sameLine) parent[root(b.adId)] = root(a.adId);\n}));\nconst cloneGroups = {};\nscored.forEach((a) => { (cloneGroups[root(a.adId)] = cloneGroups[root(a.adId)] || []).push(a.adId); });\nscored.forEach((a) => {\n  const g = cloneGroups[root(a.adId)];\n  a.cloneCount = g.length;\n  a.cloneOf = g.filter((id) => id !== a.adId);\n});\n\n// 3) Market signal (0-100) from observable Ad Library behaviour only.\nconst byPosition = [...scored].sort((x, y) => x.libraryPosition - y.libraryPosition);\nbyPosition.forEach((a, idx) => {\n  const parts = {};\n  if (cfg.impressionSorted) parts.impressionRank = N > 1 ? (100 * (N - 1 - idx)) / (N - 1) : 100;\n  if (a.daysActive != null) parts.longevity = Math.min(a.daysActive / LONGEVITY_FULL_DAYS, 1) * 100;\n  parts.distribution = Math.min((a.platforms.length || 1) / 5, 1) * 60 + Math.min(a.cloneCount - 1, 2) * 20;\n  const wSum = Object.keys(parts).reduce((s, k) => s + MARKET_WEIGHTS[k], 0);\n  a.marketParts = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, r1(v)]));\n  a.marketSignal = r1(Object.entries(parts).reduce((s, [k, v]) => s + v * MARKET_WEIGHTS[k], 0) / wSum);\n  a.impressionRankInSample = idx + 1;\n});\n\n// 4) Blend, rank, quadrant.\nscored.forEach((a) => { a.adStrengthIndex = r1(a.creativeScore * BLEND.creative + a.marketSignal * BLEND.market); });\nscored.sort((x, y) => (y.adStrengthIndex - x.adStrengthIndex) || (y.creativeScore - x.creativeScore) || (x.libraryPosition - y.libraryPosition));\nconst medC = median(scored.map((a) => a.creativeScore));\nconst medM = median(scored.map((a) => a.marketSignal));\nscored.forEach((a, i) => {\n  a.rank = i + 1;\n  const hiC = a.creativeScore >= medC;\n  const hiM = a.marketSignal >= medM;\n  a.quadrant = hiC && hiM ? 'Proven winner' : hiC ? 'Hidden gem' : hiM ? 'Study this' : 'Retire';\n});\n\n// 5) Patterns across the sample.\nconst A = (a) => a.analysis;\nconst dims = Object.keys(CREATIVE_WEIGHTS);\nconst aggregates = {\n  n: N,\n  avgCreative: r1(avg(scored.map((a) => a.creativeScore))),\n  avgMarket: r1(avg(scored.map((a) => a.marketSignal))),\n  avgDims: Object.fromEntries(dims.map((k) => [k, r1(avg(scored.map((a) => A(a).scores[k])))])),\n  hookTypes: sortedCounts(countBy(scored.map((a) => A(a).hook.type))),\n  formats: sortedCounts(countBy(scored.map((a) => A(a).format))),\n  talent: sortedCounts(countBy(scored.map((a) => A(a).talent))),\n  spokenLanguages: sortedCounts(countBy(scored.map((a) => primaryLanguage(A(a).language)))),\n  angles: sortedCounts(countBy(scored.map((a) => A(a).creativeAngle))),\n  awareness: sortedCounts(countBy(scored.map((a) => A(a).awarenessLevel))),\n  funnel: sortedCounts(countBy(scored.map((a) => A(a).funnelStage))),\n  ctaButtons: sortedCounts(countBy(scored.map((a) => a.cta))),\n  spokenCtaNone: scored.filter((a) => /^(none|not observed)/i.test(A(a).cta.spoken)).length,\n  offers: sortedCounts(countBy(scored.map((a) => offerLabel(A(a).offer)))),\n  medianProductSec: median(scored.map((a) => A(a).productFirstSeenSec)),\n  medianBrandSec: median(scored.map((a) => A(a).brandFirstMentionSec)),\n  captionsShare: N ? Math.round((scored.filter((a) => A(a).captionsBurnedIn).length / N) * 100) : 0,\n  flags: Object.fromEntries(Object.keys(scored[0] ? A(scored[0]).flags : {}).map((k) => [k, scored.filter((a) => A(a).flags[k]).length])),\n  medianDuration: median(scored.map((a) => a.durationS)),\n  cloneGroups: Object.values(cloneGroups).filter((g) => g.length > 1),\n  quadrants: sortedCounts(countBy(scored.map((a) => a.quadrant))),\n  analysisModes: sortedCounts(countBy(scored.map((a) => a.analysisMode))),\n};\n\n// 6) Gap candidates - counted, never guessed. The strategist may only build on these.\nconst FLAG_LABEL = {\n  quantifiedOutcome: 'a quantified outcome (a number, a timeline, a salary or score jump)',\n  socialProof: 'social proof (learner counts, ratings, testimonials)',\n  urgency: 'urgency or a deadline',\n  comparison: 'a comparison against the alternative (tutor, coaching class, YouTube)',\n  objectionHandling: 'objection handling (shy, no time, weak grammar, too old)',\n  beforeAfter: 'a before -> after transformation',\n  customerStory: 'a real learner story',\n  priceShown: 'the price inside the creative itself',\n};\nconst gaps = [];\nObject.entries(FLAG_LABEL).forEach(([k, label]) => {\n  const c = aggregates.flags[k] || 0;\n  if (N && c / N <= 0.25) gaps.push({ key: k, severity: 1 - c / N, title: c ? `Only ${c} of ${N} ads use ${label}` : `None of the ${N} ads use ${label}`, count: c, n: N, examples: scored.filter((a) => A(a).flags[k]).map((a) => a.adId) });\n});\nconst topHook = aggregates.hookTypes[0];\nif (topHook && topHook.share >= 50) gaps.push({ key: 'hookMonoculture', severity: topHook.share / 100, title: `${topHook.share}% of hooks are the same type (${topHook.label})`, count: topHook.count, n: N });\nif (aggregates.ctaButtons.length === 1) gaps.push({ key: 'ctaMonoculture', severity: 0.7, title: `All ${N} ads end on the same button: \"${aggregates.ctaButtons[0].label}\"`, count: N, n: N });\nif (aggregates.spokenCtaNone >= N / 2) gaps.push({ key: 'silentCta', severity: aggregates.spokenCtaNone / N, title: `${aggregates.spokenCtaNone} of ${N} creatives never say or show what to do next`, count: aggregates.spokenCtaNone, n: N });\nconst topOffer = aggregates.offers[0];\nif (topOffer && N > 2 && topOffer.share >= 80) gaps.push({ key: 'offerMonoculture', severity: 0.6, title: `${topOffer.count} of ${N} ads lean on one offer (\"${topOffer.label}\") with no offer ladder`, count: topOffer.count, n: N });\nif (aggregates.medianProductSec != null && aggregates.medianProductSec > 6) gaps.push({ key: 'lateProduct', severity: Math.min(aggregates.medianProductSec / 20, 1), title: `The product shows up late: median first appearance at ${aggregates.medianProductSec}s`, count: null, n: N });\nif (aggregates.captionsShare < 50) gaps.push({ key: 'soundOff', severity: 1 - aggregates.captionsShare / 100, title: `Only ${aggregates.captionsShare}% of creatives work with the sound off`, count: null, n: N });\nif (cfg.country === 'IN') {\n  const seen = new Set([...portfolio.captionLanguages, ...aggregates.spokenLanguages.map((l) => l.label)].join(' ').match(/Hindi|Hinglish|Tamil|Kannada|Telugu|Bengali|Marathi|Malayalam|Gujarati|Punjabi|Odia/g) || []);\n  const missing = ['Telugu', 'Bengali', 'Marathi', 'Malayalam', 'Gujarati'].filter((l) => !seen.has(l));\n  if (missing.length >= 3) gaps.push({ key: 'languageCoverage', severity: 0.5, title: `Sample covers ${[...seen].join(', ') || 'no regional language'}; nothing in ${missing.slice(0, 3).join(', ')}`, count: seen.size, n: N, note: 'Within the sampled top ads only - the full library may differ.' });\n}\ngaps.sort((a, b) => b.severity - a.severity);\n\n// 7) Brief for the strategist (compact, evidence-first).\nconst winner = scored[0];\nconst line = (a) => {\n  const x = A(a);\n  const flags = Object.entries(x.flags).filter(([, v]) => v).map(([k]) => k).join(',') || 'none';\n  return `#${a.rank} ad ${a.adId} | index ${a.adStrengthIndex} (creative ${a.creativeScore}, market ${a.marketSignal}, ${a.quadrant}) | ${x.format}, ${x.language}, ${a.durationS || '?'}s | hook[${x.hook.type}, ${x.scores.hookScore}/10]: \"${x.hook.english}\" | angle: ${x.creativeAngle} | offer: ${x.offer} | spoken CTA: ${x.cta.spoken} | product at ${x.productFirstSeenSec ?? '?'}s | flags: ${flags} | weakness: ${x.weakness}`;\n};\nconst strategistPrompt = [\n  `ADVERTISER: ${cfg.brand} | Market: ${cfg.country} | Source: Meta Ad Library, ${cfg.activeStatus} ads, sorted by ${cfg.sortMode}.`,\n  `PORTFOLIO (observed): ${portfolio.reportedActiveAds ?? 'unknown'} active ads reported by the library; sample ${N}; ${portfolio.pages.length} Facebook pages in sample (${portfolio.pages.join('; ')}); ${portfolio.uniqueCreatives} unique creatives but only ${portfolio.uniqueCaptions} unique captions; ${portfolio.dcoShare}/${portfolio.sampleSize} are Dynamic Creative; caption languages: ${portfolio.captionLanguages.join(', ')}; destinations: ${JSON.stringify(portfolio.destinations)}; template placeholders leaking in ${portfolio.templateLeaks.length} ads.`,\n  `AGGREGATES: avg creative ${aggregates.avgCreative}, avg market ${aggregates.avgMarket}; hook types ${JSON.stringify(aggregates.hookTypes.map((h) => `${h.label}:${h.count}`))}; formats ${JSON.stringify(aggregates.formats.map((h) => `${h.label}:${h.count}`))}; median product reveal ${aggregates.medianProductSec}s; sound-off ready ${aggregates.captionsShare}%; flags ${JSON.stringify(aggregates.flags)}; creative clones ${JSON.stringify(aggregates.cloneGroups)}.`,\n  'RANKED ADS:',\n  ...scored.map(line),\n  `WINNER DETAIL: ${JSON.stringify({ adId: winner && winner.adId, observed: winner && A(winner).observed, whyItWorks: winner && A(winner).whyItWorks, first3s: winner && A(winner).first3s, scores: winner && A(winner).scores })}`,\n  'GAP CANDIDATES (counted from the data, ordered by severity):',\n  ...gaps.map((g, i) => `${i + 1}. ${g.title}${g.note ? ` (${g.note})` : ''}`),\n].join('\\n');\n\nreturn [{\n  json: {\n    config: cfg,\n    portfolio,\n    weights: { creative: CREATIVE_WEIGHTS, market: MARKET_WEIGHTS, blend: BLEND, longevityFullDays: LONGEVITY_FULL_DAYS },\n    ads: scored,\n    unscored,\n    winner,\n    aggregates,\n    gaps,\n    medians: { creative: medC, market: medM },\n    strategistPrompt,\n  },\n}];\n"
+      },
+      "id": "0085eb16-706b-4f9a-8166-2a3c9f71d02b",
+      "name": "14 — Score, Rank & Find Gaps",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.strategistPrompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are the growth lead writing a one-read internal memo after a competitor creative teardown. You get pre-computed scores, counts and gap candidates. Your job is interpretation, not arithmetic: never change a score, rank or count.\n\nVoice: short sentences, numbers first, specific moments over adjectives. Write the way a sharp operator talks to their team. No emojis, no exclamation marks. Never use these words: leverage, unlock, elevate, robust, seamless, delve, game-changer, cutting-edge, landscape, resonate, crucial, harness, tapestry, synergy, revolutionize, empower, dive, journey, holistic, comprehensive.\n\nHonesty rules:\n- The ranking is estimated creative effectiveness from observable characteristics. Never say an ad \"performs\" or \"converts\" best. Say \"scores highest in our framework\" or \"Meta's impression sort places it at #k\".\n- Every claim must point to evidence from the brief (an ad id, a quote, a count or a score).\n- Creative Score and Market Signal are different scales. Never compare one with the other, and never call one ad's score \"above the market\".\n- Don't describe reach or results you can't see: no \"dominates\", \"massive\", \"outperforms\", \"drives volume\", \"significantly\". Describe what the advertiser does, not how well it works.\n- Gaps must build on the GAP CANDIDATES list; you may merge or re-word them, not invent new counts.\n- New ad concepts must not rewrite an existing ad. Each one must exploit a named gap and be shootable by a small team in a week. Where the data shows regional-language or Hinglish creatives, you may write hooks in that language and add the English translation.\n\nReturn ONLY a JSON object with exactly these keys:\n{\n  \"headline\": \"one sentence, max 24 words: what this advertiser is really doing on Meta\",\n  \"executiveSummary\": [\"3-4 bullets, each containing a number from the brief\"],\n  \"winnerWhy\": [{\"point\": \"short claim\", \"evidence\": \"specific moment, quote or score\"}],\n  \"winnerSteal\": [\"2-3 things another team should copy from the winner\"],\n  \"hookTakeaway\": \"2 sentences on what the hook data says\",\n  \"ctaTakeaway\": \"2 sentences on what the CTA data says\",\n  \"patterns\": [{\"title\": \"\", \"insight\": \"\", \"evidence\": \"\"}],\n  \"gaps\": [{\"title\": \"\", \"evidence\": \"\", \"whyItMatters\": \"\", \"opportunity\": \"\"}],\n  \"concepts\": [{\"name\": \"\", \"exploitsGap\": \"\", \"format\": \"\", \"hook\": \"\", \"hookEnglish\": \"\", \"angle\": \"\", \"script\": [\"0-3s: ...\", \"3-10s: ...\", \"10-20s: ...\", \"20-25s: ...\"], \"caption\": \"\", \"cta\": \"\", \"whyItCouldWork\": \"\", \"successMetric\": \"\", \"killCriteria\": \"\"}],\n  \"recommendations\": [{\"action\": \"\", \"why\": \"\", \"effort\": \"Low|Med|High\", \"impact\": \"Low|Med|High\"}]\n}\nCounts: winnerWhy 3-5, patterns 4-5, gaps 3-5, concepts exactly 3, recommendations 4-6.\n",
+          "maxOutputTokens": 12000,
+          "temperature": 0.5
+        }
+      },
+      "id": "3eba14f8-d5a9-465f-8160-d40c521c94fb",
+      "name": "15 — Gemini · Strategist Memo",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the strategist memo. If Gemini is down or returns junk the report\n// still ships: every section falls back to the deterministic findings.\nconst base = $('14 — Score, Rank & Find Gaps').first().json;\n\nconst collectText = (node) => {\n  if (node == null) return '';\n  if (typeof node === 'string') return node;\n  if (Array.isArray(node)) return node.map(collectText).join('');\n  if (typeof node === 'object') {\n    if (typeof node.text === 'string') return node.text;\n    for (const k of ['content', 'parts', 'message', 'output']) if (node[k]) return collectText(node[k]);\n    if (node.candidates) return collectText(node.candidates[0]);\n  }\n  return '';\n};\nconst parseJson = (text) => {\n  let t = String(text || '').replace(/```(?:json)?/gi, '').trim();\n  const s = t.indexOf('{');\n  const e = t.lastIndexOf('}');\n  if (s === -1 || e <= s) throw new Error('No JSON in strategist output');\n  t = t.slice(s, e + 1);\n  try { return JSON.parse(t); } catch (err) { return JSON.parse(t.replace(/,\\s*([}\\]])/g, '$1')); }\n};\n\n// Belt and braces: scrub the phrases that make copy read machine-written.\nconst BANNED = /\\b(leverag\\w*|unlock\\w*|elevat\\w*|robust|seamless\\w*|delv\\w*|game[- ]changer|cutting[- ]edge|landscape|resonat\\w*|crucial|harness\\w*|tapestry|synerg\\w*|revolutioni[sz]\\w*|empower\\w*|holistic|comprehensive)\\b/gi;\nconst SWAP = { leverage: 'use', unlock: 'open up', elevate: 'lift', robust: 'solid', seamless: 'smooth', crucial: 'key', resonate: 'land', harness: 'use', comprehensive: 'full', holistic: 'whole' };\nconst scrub = (v) => {\n  if (typeof v === 'string') {\n    return v.replace(BANNED, (m) => {\n      const stem = Object.keys(SWAP).find((k) => m.toLowerCase().startsWith(k.slice(0, -1)));\n      return stem ? SWAP[stem] : '';\n    }).replace(/\\s{2,}/g, ' ').replace(/!+/g, '.').trim();\n  }\n  if (Array.isArray(v)) return v.map(scrub);\n  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, scrub(x)]));\n  return v;\n};\nconst arr = (v) => (Array.isArray(v) ? v : []);\n\nlet strategy = null;\nlet strategyError = null;\ntry {\n  const p = parseJson(collectText($input.first().json));\n  if (!p.headline || !Array.isArray(p.concepts)) throw new Error('Strategist JSON missing headline/concepts');\n  strategy = scrub(p);\n} catch (e) {\n  strategyError = $input.first().json.error ? String($input.first().json.error.message || $input.first().json.error) : e.message;\n}\n\nconst w = base.winner;\nconst fallback = {\n  headline: `${base.config.brand}: ${base.portfolio.uniqueCreatives} distinct creatives behind ${base.portfolio.uniqueCaptions} captions in the sampled top ads.`,\n  executiveSummary: [\n    w ? `Top-scoring ad ${w.adId} reached ${w.adStrengthIndex}/100 on the Ad Strength Index.` : 'No ad could be scored.',\n    `Average creative score across ${base.aggregates.n} ads: ${base.aggregates.avgCreative}/100.`,\n    base.aggregates.hookTypes[0] ? `Most common hook type: ${base.aggregates.hookTypes[0].label} (${base.aggregates.hookTypes[0].count} ads).` : '',\n  ].filter(Boolean),\n  winnerWhy: w ? [{ point: 'Highest blended score', evidence: w.analysis.whyItWorks }] : [],\n  winnerSteal: [],\n  hookTakeaway: '', ctaTakeaway: '',\n  patterns: [],\n  gaps: base.gaps.slice(0, 5).map((g) => ({ title: g.title, evidence: `${g.count ?? '-'} of ${g.n}`, whyItMatters: '', opportunity: '' })),\n  concepts: [],\n  recommendations: [],\n};\n\nconst s = strategy || fallback;\nreturn [{\n  json: {\n    ...base,\n    strategy: {\n      ...s,\n      executiveSummary: arr(s.executiveSummary).slice(0, 4),\n      winnerWhy: arr(s.winnerWhy).slice(0, 5),\n      patterns: arr(s.patterns).slice(0, 5),\n      gaps: arr(s.gaps).slice(0, 5),\n      concepts: arr(s.concepts).slice(0, 3),\n      recommendations: arr(s.recommendations).slice(0, 6),\n    },\n    strategySource: strategy ? 'gemini' : 'deterministic fallback',\n    strategyError,\n  },\n}];\n"
+      },
+      "id": "47bd82ad-3ec4-4689-851b-4a602ecbfa24",
+      "name": "16 — Validate Strategy JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Renders the final report as print-ready HTML (A4). Same file feeds PDF.co\n// and the HTML fallback. Every number on the page comes from node 14; the\n// strategist only contributes prose.\nconst d = $input.first().json;\nconst { config: cfg, portfolio: pf, ads, aggregates: ag, strategy: st, weights } = d;\nconst w = d.winner;\n\nconst esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst n1 = (v) => (v == null || Number.isNaN(v) ? '–' : (Math.round(v * 10) / 10).toFixed(1));\nconst n0 = (v) => (v == null || Number.isNaN(v) ? '–' : String(Math.round(v)));\nconst pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);\nconst dateFmt = (iso) => { try { return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return iso; } };\nconst short = (s, n) => { const t = String(s ?? ''); return t.length > n ? `${t.slice(0, n - 1)}…` : t; };\nconst A = (a) => a.analysis;\nconst N = ads.length;\nconst DIM_LABEL = { hookScore: 'Hook', clarityScore: 'Clarity', valuePropScore: 'Value prop', offerScore: 'Offer', ctaScore: 'CTA', specificityScore: 'Specificity', creativeAngleScore: 'Creative angle', conversionIntentScore: 'Conversion intent' };\nconst FLAG_SHORT = { quantifiedOutcome: 'Numbers', socialProof: 'Social proof', urgency: 'Urgency', comparison: 'Comparison', objectionHandling: 'Objections', beforeAfter: 'Before/after', customerStory: 'Learner story', priceShown: 'Price on screen', productUiShown: 'App UI shown', humanFace: 'Human face' };\nconst generated = dateFmt(cfg.runStartedAt);\n\nconst tag = (kind) => `<span class=\"tag tag-${kind}\">${kind}</span>`;\nconst pill = (t, cls = '') => `<span class=\"pill ${cls}\">${esc(t)}</span>`;\nconst quadClass = (q) => ({ 'Proven winner': 'q1', 'Hidden gem': 'q2', 'Study this': 'q3', Retire: 'q4' }[q] || '');\nconst thumb = (a, cls = '') => (a.imageUrl\n  ? `<div class=\"thumb ${cls}\"><img src=\"${esc(a.imageUrl)}\" alt=\"\"></div>`\n  : `<div class=\"thumb ${cls} ph\"><span>${esc(a.mediaType)}</span></div>`);\nconst bar = (v, max = 10, cls = '') => `<span class=\"bar ${cls}\"><i style=\"width:${Math.max(0, Math.min(100, (v / max) * 100))}%\"></i></span>`;\nconst runhead = (label) => `<div class=\"runhead\"><span>${esc(cfg.brand)} · Ad Library Teardown</span><span>${esc(label)}</span></div>`;\nconst section = (num, kicker, title, lede) => `<div class=\"kicker\">${num} — ${esc(kicker)}</div><h2>${esc(title)}</h2>${lede ? `<p class=\"lede\">${lede}</p>` : ''}`;\n\nconst barsChart = (rows, max) => `<div class=\"hbars\">${rows.map((r) => `\n  <div class=\"hb\"><span class=\"hb-l\">${esc(r.label)}</span><span class=\"hb-t\"><i style=\"width:${max ? (r.count / max) * 100 : 0}%\"></i></span><span class=\"hb-v\">${r.count}</span></div>`).join('')}</div>`;\n\n// Creative vs market scatter (SVG).\nconst scatter = () => {\n  const W = 300; const H = 180; const P = 30;\n  const x = (v) => P + (v / 100) * (W - P - 10);\n  const y = (v) => H - P - (v / 100) * (H - P - 10);\n  const mc = d.medians.creative ?? 50; const mm = d.medians.market ?? 50;\n  const dots = ads.map((a) => `<g><circle cx=\"${x(a.creativeScore)}\" cy=\"${y(a.marketSignal)}\" r=\"${a.rank === 1 ? 8 : 6.5}\" class=\"${a.rank === 1 ? 'dot win' : 'dot'}\"/><text x=\"${x(a.creativeScore)}\" y=\"${y(a.marketSignal) + 3}\" class=\"dl\">${a.rank}</text></g>`).join('');\n  return `<svg viewBox=\"0 0 ${W} ${H}\" class=\"scatter\">\n    <line x1=\"${x(mc)}\" y1=\"10\" x2=\"${x(mc)}\" y2=\"${H - P}\" class=\"med\"/><line x1=\"${P}\" y1=\"${y(mm)}\" x2=\"${W - 10}\" y2=\"${y(mm)}\" class=\"med\"/>\n    <line x1=\"${P}\" y1=\"${H - P}\" x2=\"${W - 10}\" y2=\"${H - P}\" class=\"ax\"/><line x1=\"${P}\" y1=\"10\" x2=\"${P}\" y2=\"${H - P}\" class=\"ax\"/>\n    <text x=\"${W - 12}\" y=\"20\" class=\"ql\" text-anchor=\"end\">Proven winner</text><text x=\"${P + 4}\" y=\"20\" class=\"ql\">Study this</text>\n    <text x=\"${W - 12}\" y=\"${H - P - 6}\" class=\"ql\" text-anchor=\"end\">Hidden gem</text><text x=\"${P + 4}\" y=\"${H - P - 6}\" class=\"ql\">Retire</text>\n    <text x=\"${(W + P) / 2}\" y=\"${H - 8}\" class=\"at\" text-anchor=\"middle\">Creative score →</text>\n    <text x=\"10\" y=\"${(H - P) / 2}\" class=\"at\" text-anchor=\"middle\" transform=\"rotate(-90 10 ${(H - P) / 2})\">Market signal →</text>\n    ${dots}</svg>`;\n};\n\n// Time-to-product strip.\nconst revealStrip = () => {\n  const rows = ads.filter((a) => A(a).productFirstSeenSec != null || A(a).brandFirstMentionSec != null);\n  if (!rows.length) return '<p class=\"muted\">Not enough timing data observed.</p>';\n  const maxS = Math.max(15, ...rows.map((a) => Math.max(A(a).productFirstSeenSec || 0, A(a).brandFirstMentionSec || 0, a.durationS || 0)));\n  const W = 300; const L = 34; const rowH = 14;\n  const H = rows.length * rowH + 22;\n  const x = (s) => L + (s / maxS) * (W - L - 8);\n  const ticks = [0, 5, 10, 15, 20, 30, 45, 60].filter((t) => t <= maxS);\n  return `<svg viewBox=\"0 0 ${W} ${H}\" class=\"strip\">${ticks.map((t) => `<line x1=\"${x(t)}\" y1=\"4\" x2=\"${x(t)}\" y2=\"${H - 16}\" class=\"grid\"/><text x=\"${x(t)}\" y=\"${H - 4}\" class=\"at\" text-anchor=\"middle\">${t}s</text>`).join('')}\n    ${rows.map((a, i) => { const yy = 10 + i * rowH; const p = A(a).productFirstSeenSec; const b = A(a).brandFirstMentionSec; return `<text x=\"0\" y=\"${yy + 3}\" class=\"at\">#${a.rank}</text>${a.durationS ? `<line x1=\"${x(0)}\" y1=\"${yy}\" x2=\"${x(a.durationS)}\" y2=\"${yy}\" class=\"dur\"/>` : ''}${b != null ? `<rect x=\"${x(b) - 3}\" y=\"${yy - 3}\" width=\"6\" height=\"6\" class=\"brand\"/>` : ''}${p != null ? `<circle cx=\"${x(p)}\" cy=\"${yy}\" r=\"3.4\" class=\"prod\"/>` : ''}`; }).join('')}\n  </svg><div class=\"legend\"><span><i class=\"lg prod\"></i>App/product first on screen</span><span><i class=\"lg brand\"></i>Brand first named</span><span><i class=\"lg dur\"></i>Video length</span></div>`;\n};\n\nconst dimRows = (a) => Object.keys(DIM_LABEL).map((k) => `<div class=\"dim\"><span>${DIM_LABEL[k]}</span>${bar(A(a).scores[k] ?? 0)}<b>${A(a).scores[k] ?? '–'}</b><em>${Math.round(weights.creative[k] * 100)}%</em></div>`).join('');\n\n// ---------- PAGES ----------\nconst thesis = pf.uniqueCaptions < pf.uniqueCreatives\n  ? `${pf.sampleSize} ads, ${pf.uniqueCreatives} different creatives, ${pf.uniqueCaptions} caption${pf.uniqueCaptions === 1 ? '' : 's'}. Score these ads on copy and most of them tie. So the workflow watched every video and judged the creative, not the caption.`\n  : `${pf.sampleSize} ads analysed. Each creative was opened and judged on its own, not only on its caption.`;\n\nconst cover = `\n<section class=\"page cover\">\n  <div class=\"cv-top\"><span class=\"kicker\">Ad Library Teardown · Meta · ${esc(cfg.country)}</span><span class=\"mono muted\">${esc(generated)}</span></div>\n  <div class=\"cv-mid\">\n    <div class=\"cv-brand\">${esc(cfg.brand)}</div>\n    <div class=\"cv-title\">${esc(st.headline || '')}</div>\n    <div class=\"cv-thesis\"><div class=\"mono kicker\">The one thing to know</div><p>${esc(thesis)}</p></div>\n  </div>\n  <div class=\"cv-stats\">\n    <div><b>${N}</b><span>ads scored</span></div>\n    <div><b>${pf.reportedActiveAds ?? '–'}</b><span>active ads in library</span></div>\n    <div><b>${pf.uniqueCreatives}</b><span>unique creatives</span></div>\n    <div><b>${pf.uniqueCaptions}</b><span>unique captions</span></div>\n    <div><b>${pf.pages.length}</b><span>Facebook pages</span></div>\n  </div>\n  <div class=\"cv-foot\">\n    <div><span class=\"muted\">Source</span><span class=\"mono src\">${esc(short(cfg.adLibraryUrl, 140))}</span></div>\n    <div><span class=\"muted\">Sample</span><span>Top ${N} active ads by Meta's ${cfg.impressionSorted ? 'impression' : esc(cfg.sortMode)} sort · ${pf.duplicatesRemoved} duplicates removed</span></div>\n    <div><span class=\"muted\">Pipeline</span><span>n8n · Apify · Gemini (video understanding) · deterministic scoring</span></div>\n    ${cfg.preparedBy ? `<div><span class=\"muted\">Prepared by</span><span>${esc(cfg.preparedBy)}</span></div>` : ''}\n  </div>\n</section>`;\n\nconst execSummary = `\n<section class=\"page\">\n  ${runhead('01 Executive summary')}\n  ${section('01', 'Executive summary', 'What the library is telling us', esc(st.headline || ''))}\n  <ul class=\"bullets big\">${st.executiveSummary.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>\n  <div class=\"kpis\">\n    <div><span>Best ad</span><b>${w ? n1(w.adStrengthIndex) : '–'}</b><em>Ad Strength Index</em></div>\n    <div><span>Avg creative</span><b>${n1(ag.avgCreative)}</b><em>of 100</em></div>\n    <div><span>Avg market signal</span><b>${n1(ag.avgMarket)}</b><em>of 100</em></div>\n    <div><span>Product on screen</span><b>${ag.medianProductSec ?? '–'}${ag.medianProductSec != null ? 's' : ''}</b><em>median first reveal</em></div>\n    <div><span>Sound-off ready</span><b>${ag.captionsShare}%</b><em>burned-in captions</em></div>\n  </div>\n  <div class=\"two\">\n    <div class=\"box\">\n      <div class=\"box-h\">Portfolio, as observed</div>\n      <table class=\"kv\">\n        <tr><td>Active ads reported</td><td>${pf.reportedActiveAds ?? '–'}</td></tr>\n        <tr><td>Pages running ads (sample)</td><td>${pf.pages.map(esc).join('<br>')}</td></tr>\n        <tr><td>Dynamic Creative share</td><td>${pf.dcoShare}/${pf.sampleSize}</td></tr>\n        <tr><td>Caption languages</td><td>${pf.captionLanguages.map(esc).join(', ')}</td></tr>\n        <tr><td>Destinations</td><td>${Object.entries(pf.destinations).map(([k, v]) => `${esc(k)} (${v})`).join(', ')}</td></tr>\n        <tr><td>Placements</td><td>${pf.platforms.map(esc).join(', ')}</td></tr>\n        ${pf.templateLeaks.length ? `<tr><td>Template leaks</td><td>${pf.templateLeaks.length} ads show raw <span class=\"mono\">{{product.name}}</span> placeholders in the library</td></tr>` : ''}\n      </table>\n    </div>\n    <div class=\"box\">\n      <div class=\"box-h\">How to read this report</div>\n      <p class=\"small\">${tag('observed')} seen, heard or scraped directly.<br>${tag('inferred')} Gemini's judgement, always phrased as \"likely\".<br>${tag('estimated')} a score computed in n8n from the two above.</p>\n      <p class=\"small\">The ranking is estimated creative effectiveness from observable characteristics. It is not campaign performance — the Ad Library does not expose CTR, CPI or ROAS.</p>\n      <div class=\"box-h\" style=\"margin-top:4mm\">Where the ads land</div>\n      ${barsChart(ag.quadrants, N)}\n    </div>\n  </div>\n</section>`;\n\nconst pipeline = ['Ad Library URL', 'Apify scrape', 'Normalize · dedupe · fingerprint', 'Gemini watches each video', 'Validate / repair JSON', 'Score in code', 'Rank + quadrant', 'Strategist memo', 'PDF'];\nconst methodology = `\n<section class=\"page\">\n  ${runhead('02 Methodology')}\n  ${section('02', 'Methodology', 'How the winner is picked', 'Gemini describes and grades. n8n does the maths. The same inputs always give the same ranking.')}\n  <div class=\"flow\">${pipeline.map((p, i) => `<div class=\"step\"><span class=\"mono\">${String(i + 1).padStart(2, '0')}</span>${esc(p)}</div>`).join('<div class=\"arrow\">→</div>')}</div>\n  <div class=\"two\">\n    <div class=\"box\">\n      <div class=\"box-h\">Creative Score · 0–100 ${tag('estimated')}</div>\n      <table class=\"weights\">${Object.entries(weights.creative).map(([k, v]) => `<tr><td>${DIM_LABEL[k]}</td><td>${bar(v * 100, 20, 'thin')}</td><td class=\"mono\">${Math.round(v * 100)}%</td></tr>`).join('')}</table>\n      <p class=\"small muted\">Each dimension is a 0–10 grade from Gemini against a written rubric with anchors. Weighted sum × 10. Missing grades are imputed at 5 and flagged.</p>\n    </div>\n    <div class=\"box\">\n      <div class=\"box-h\">Market Signal · 0–100 ${tag('observed')}</div>\n      <table class=\"weights\">\n        <tr><td>Impression rank in sample</td><td>${bar(weights.market.impressionRank * 100, 60, 'thin')}</td><td class=\"mono\">${Math.round(weights.market.impressionRank * 100)}%</td></tr>\n        <tr><td>Longevity (full at ${weights.longevityFullDays} days)</td><td>${bar(weights.market.longevity * 100, 60, 'thin')}</td><td class=\"mono\">${Math.round(weights.market.longevity * 100)}%</td></tr>\n        <tr><td>Distribution (placements + clones)</td><td>${bar(weights.market.distribution * 100, 60, 'thin')}</td><td class=\"mono\">${Math.round(weights.market.distribution * 100)}%</td></tr>\n      </table>\n      <p class=\"small muted\">Advertisers kill ads that lose money. An ad Meta ranks high on impressions, that has survived for weeks, or that has been re-uploaded as a clone is a revealed preference — the closest public proxy to \"this one works\". ${cfg.impressionSorted ? '' : '<b>This run was not impression-sorted, so rank is excluded and weights renormalised.</b>'}</p>\n    </div>\n  </div>\n  <div class=\"formula mono\">Ad Strength Index = ${weights.blend.creative} × Creative Score + ${weights.blend.market} × Market Signal</div>\n  <div class=\"two\">\n    <div class=\"box\"><div class=\"box-h\">Quadrants</div><p class=\"small\"><b>Proven winner</b> — above median on both. <b>Hidden gem</b> — strong creative the market hasn't backed yet: give it budget. <b>Study this</b> — the market likes it more than the rubric does: find what the rubric misses. <b>Retire</b> — below median on both.</p></div>\n    <div class=\"box\"><div class=\"box-h\">Sampling & cleaning</div><p class=\"small\">${pf.scrapedRows} rows scraped, ${pf.duplicatesRemoved} exact duplicates removed (same ad id or identical video assets), top ${N} kept in Meta's order. Video asset ids and durations were decoded from the CDN urls to separate ads that share a caption. ${ag.analysisModes.map((m) => `${m.count} × ${esc(m.label)}`).join(', ')}.${d.unscored.length ? ` ${d.unscored.length} ad(s) could not be scored and are listed at the end.` : ''}</p></div>\n  </div>\n</section>`;\n\nconst bestAd = !w ? '' : `\n<section class=\"page\">\n  ${runhead('03 Best ad')}\n  ${section('03', 'Best ad in the sample', `Ad ${w.adId} — ${A(w).hook.english ? short(A(w).hook.english, 70) : ''}`, 'Strongest ad in the sampled set based on our creative/conversion scoring framework, blended with observable market signals.')}\n  <div class=\"best\">\n    <div class=\"best-l\">${thumb(w, 'tall')}<a class=\"mono small\" href=\"${esc(w.adLibraryUrl)}\">View in Ad Library ↗</a><div class=\"small muted\">${esc(w.pageName)}<br>Live since ${esc(w.startDate || '–')} · ${w.daysActive ?? '–'} days<br>${w.durationS ? `${w.durationS}s video · ` : ''}${esc(A(w).language)}</div></div>\n    <div class=\"best-r\">\n      <div class=\"score-hero\"><div><span class=\"mono kicker\">Rank 1 of ${N}</span><b>${n1(w.adStrengthIndex)}</b><em>Ad Strength Index</em></div>\n        <div class=\"sub\"><div><span>Creative</span><b>${n1(w.creativeScore)}</b></div><div><span>Market</span><b>${n1(w.marketSignal)}</b></div><div><span>Quadrant</span>${pill(w.quadrant, quadClass(w.quadrant))}</div></div></div>\n      <div class=\"dims\">${dimRows(w)}</div>\n      <div class=\"field\"><label>Hook ${tag('observed')} ${pill(A(w).hook.type)}</label><p class=\"quote\">${esc(A(w).hook.text)}</p>${A(w).hook.english !== A(w).hook.text ? `<p class=\"trans\">${esc(A(w).hook.english)}</p>` : ''}</div>\n      <div class=\"field\"><label>First 3 seconds ${tag('observed')}</label><p>${esc(A(w).first3s.visual)}</p></div>\n      <div class=\"field\"><label>Body ${tag('observed')}</label><p>${esc(A(w).body)}</p></div>\n      <div class=\"field\"><label>CTA ${tag('observed')}</label><p>Said/shown: <b>${esc(A(w).cta.spoken)}</b> · Button: <b>${esc(w.cta)}</b></p></div>\n    </div>\n  </div>\n  <div class=\"two\">\n    <div class=\"box\"><div class=\"box-h\">Why it wins</div><ul class=\"ev\">${(st.winnerWhy.length ? st.winnerWhy : [{ point: 'Rubric', evidence: A(w).whyItWorks }]).map((x) => `<li><b>${esc(x.point)}</b><span>${esc(x.evidence)}</span></li>`).join('')}</ul></div>\n    <div class=\"box\"><div class=\"box-h\">Steal this</div><ul class=\"bullets\">${(st.winnerSteal || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul><div class=\"box-h\" style=\"margin-top:3mm\">Biggest leak ${tag('inferred')}</div><p class=\"small\">${esc(A(w).weakness)}</p><div class=\"box-h\" style=\"margin-top:3mm\">Test next</div><p class=\"small\">${esc(A(w).recommendation)}</p></div>\n  </div>\n</section>`;\n\nconst scoreboard = `\n<section class=\"page\">\n  ${runhead('04 Scoreboard')}\n  ${section('04', 'Ad scoreboard', 'All scored ads, ranked', 'Sorted by Ad Strength Index. Ties break on creative score, then on Meta\\'s own order.')}\n  <table class=\"board\">\n    <thead><tr><th>#</th><th></th><th>Ad</th><th>Hook</th><th class=\"r\">Hook</th><th class=\"r\">Offer</th><th class=\"r\">CTA</th><th class=\"r\">Creative</th><th class=\"r\">Market</th><th class=\"r\">Index</th></tr></thead>\n    <tbody>${ads.map((a) => `<tr class=\"${a.rank === 1 ? 'win' : ''}\">\n      <td class=\"mono\">${a.rank}</td><td>${thumb(a, 'mini')}</td>\n      <td><b class=\"mono\">${esc(a.adId)}</b><br><span class=\"muted\">${esc(A(a).format)} · ${esc(short(A(a).language.split(/[,(]/)[0].trim(), 12))}${a.durationS ? ` · ${a.durationS}s` : ''}</span></td>\n      <td><span class=\"muted\">${esc(A(a).hook.type)} ·</span> ${esc(short(A(a).hook.english, 62))}</td>\n      <td class=\"r mono\">${A(a).scores.hookScore ?? '–'}</td><td class=\"r mono\">${A(a).scores.offerScore ?? '–'}</td><td class=\"r mono\">${A(a).scores.ctaScore ?? '–'}</td>\n      <td class=\"r mono\">${n1(a.creativeScore)}</td><td class=\"r mono\">${n1(a.marketSignal)}</td><td class=\"r mono strong\">${n1(a.adStrengthIndex)}<br><span class=\"qtag ${quadClass(a.quadrant)}\">${esc(a.quadrant)}</span></td></tr>`).join('')}</tbody>\n  </table>\n  <div class=\"two\" style=\"margin-top:4mm\">\n    <div class=\"box\">${scatter()}</div>\n    <div class=\"box\"><div class=\"box-h\">Reading the grid</div><p class=\"small\">Numbers are ranks. Dashed lines are the sample medians (creative ${n1(d.medians.creative)}, market ${n1(d.medians.market)}).</p>\n      ${ads.filter((a) => a.quadrant === 'Hidden gem').length ? `<p class=\"small\"><b>Hidden gems:</b> ${ads.filter((a) => a.quadrant === 'Hidden gem').map((a) => `#${a.rank}`).join(', ')} — strong on paper, not yet backed by Meta's delivery. Cheapest wins to test.</p>` : ''}\n      ${ads.filter((a) => a.quadrant === 'Study this').length ? `<p class=\"small\"><b>Study this:</b> ${ads.filter((a) => a.quadrant === 'Study this').map((a) => `#${a.rank}`).join(', ')} — the market rewards something the rubric under-scores. Worth a frame-by-frame look.</p>` : ''}\n      ${ag.cloneGroups.length ? `<p class=\"small\"><b>Creative clones:</b> ${ag.cloneGroups.map((g) => g.join(' = ')).join('; ')} — same video uploaded under multiple ad ids, a sign the advertiser is scaling it.</p>` : ''}\n    </div>\n  </div>\n</section>`;\n\nconst card = (a) => `\n<article class=\"card\">\n  <div class=\"card-l\">${thumb(a)}<div class=\"small muted mono\">${esc(a.adId)}</div></div>\n  <div class=\"card-r\">\n    <div class=\"card-h\"><span class=\"mono kicker\">Ad #${String(a.rank).padStart(2, '0')}</span><span class=\"muted small\">${esc(a.pageName)} · ${esc(A(a).format)} · ${esc(A(a).language)}${a.durationS ? ` · ${a.durationS}s` : ''} · ${esc(a.analysisMode)}</span></div>\n    <div class=\"chips\"><span>Index <b>${n1(a.adStrengthIndex)}</b></span><span>Creative <b>${n1(a.creativeScore)}</b></span><span>Market <b>${n1(a.marketSignal)}</b></span>${pill(a.quadrant, quadClass(a.quadrant))}${a.sameCopy ? pill(`caption shared ×${a.copyGroupSize}`, 'ghost') : ''}${a.cloneOf.length ? pill(`clone of ${a.cloneOf.join(', ')}`, 'ghost') : ''}</div>\n    <div class=\"grid3\">\n      <div class=\"field span2\"><label>Hook · ${esc(A(a).hook.type)} · ${A(a).scores.hookScore ?? '–'}/10</label><p class=\"quote sm\">${esc(A(a).hook.text)}</p>${A(a).hook.english !== A(a).hook.text ? `<p class=\"trans\">${esc(A(a).hook.english)}</p>` : ''}</div>\n      <div class=\"field\"><label>CTA</label><p>${esc(A(a).cta.spoken)} <span class=\"muted\">· \"${esc(a.cta)}\"</span></p><label>Offer</label><p>${esc(A(a).offer)}</p></div>\n      <div class=\"field span3\"><label>Body</label><p>${esc(A(a).body)}</p></div>\n      <div class=\"field\"><label>Angle · likely target</label><p>${esc(A(a).creativeAngle)} — <span class=\"muted\">${esc(A(a).targetAudience)}</span></p></div>\n      <div class=\"field\"><label>Pain → outcome</label><p>${esc(A(a).painPoint)} → ${esc(A(a).desiredOutcome)}</p></div>\n      <div class=\"field\"><label>Why it works</label><p>${esc(A(a).whyItWorks)}</p></div>\n      <div class=\"field\"><label>Weakness</label><p>${esc(A(a).weakness)}</p></div>\n      <div class=\"field span2 rec\"><label>Recommendation</label><p>${esc(A(a).recommendation)}</p></div>\n    </div>\n  </div>\n</article>`;\n\nconst individual = `\n<section class=\"page flow-page\">\n  ${runhead('05 Individual ads')}\n  ${section('05', 'Individual ad analysis', 'Every ad, one card each', 'Hook, body and CTA as observed in the creative; target, angle and verdicts are Gemini\\'s inference.')}\n  ${ads.map(card).join('')}\n</section>`;\n\nconst hooks = `\n<section class=\"page\">\n  ${runhead('06 Hooks')}\n  ${section('06', 'Hook analysis', 'What happens in the first three seconds', esc(st.hookTakeaway || ''))}\n  <div class=\"two\">\n    <div class=\"box\"><div class=\"box-h\">Hook types</div>${barsChart(ag.hookTypes, N)}<p class=\"small muted\">Average hook score ${n1(ag.avgDims.hookScore)}/10.</p></div>\n    <div class=\"box\"><div class=\"box-h\">Time to product ${tag('observed')}</div>${revealStrip()}<p class=\"small muted\">Median product reveal ${ag.medianProductSec ?? '–'}s · median brand mention ${ag.medianBrandSec ?? '–'}s.</p></div>\n  </div>\n  <table class=\"board compact\">\n    <thead><tr><th>#</th><th>Opening visual</th><th>Hook (English)</th><th>Type</th><th class=\"r\">Score</th></tr></thead>\n    <tbody>${ads.map((a) => `<tr><td class=\"mono\">${a.rank}</td><td>${esc(short(A(a).first3s.visual, 110))}</td><td>${esc(short(A(a).hook.english, 120))}</td><td>${esc(A(a).hook.type)}</td><td class=\"r mono\">${A(a).scores.hookScore ?? '–'}</td></tr>`).join('')}</tbody>\n  </table>\n</section>`;\n\nconst ctas = `\n<section class=\"page\">\n  ${runhead('07 CTAs')}\n  ${section('07', 'CTA analysis', 'How each ad asks for the install', esc(st.ctaTakeaway || ''))}\n  <div class=\"kpis three\">\n    <div><span>Button variety</span><b>${ag.ctaButtons.length}</b><em>${esc(ag.ctaButtons.map((c) => `\"${c.label}\" ×${c.count}`).join(', '))}</em></div>\n    <div><span>Silent CTAs</span><b>${ag.spokenCtaNone}/${N}</b><em>never say what to do next</em></div>\n    <div><span>Avg CTA score</span><b>${n1(ag.avgDims.ctaScore)}</b><em>of 10 · offer ${n1(ag.avgDims.offerScore)}</em></div>\n  </div>\n  <div class=\"box\"><div class=\"box-h\">Offers observed</div>${barsChart(ag.offers, N)}</div>\n  <table class=\"board compact\" style=\"margin-top:5mm\">\n    <thead><tr><th>#</th><th>Said / shown in the creative</th><th>Button</th><th>Note</th><th class=\"r\">CTA</th></tr></thead>\n    <tbody>${ads.map((a) => `<tr><td class=\"mono\">${a.rank}</td><td>${esc(short(A(a).cta.spoken, 90))}</td><td>${esc(a.cta)}</td><td class=\"muted\">${esc(short(A(a).cta.strengthNote, 110))}</td><td class=\"r mono\">${A(a).scores.ctaScore ?? '–'}</td></tr>`).join('')}</tbody>\n  </table>\n</section>`;\n\nconst flagKeys = Object.keys(FLAG_SHORT);\nconst patterns = `\n<section class=\"page\">\n  ${runhead('08 Creative patterns')}\n  ${section('08', 'Creative patterns', 'What this advertiser keeps doing', '')}\n  <div class=\"pgrid\">${st.patterns.map((p) => `<div class=\"box\"><div class=\"box-h\">${esc(p.title)}</div><p class=\"small\">${esc(p.insight)}</p><p class=\"ev-line\">${esc(p.evidence)}</p></div>`).join('')}</div>\n  <div class=\"three-col\">\n    <div class=\"box\"><div class=\"box-h\">Formats</div>${barsChart(ag.formats, N)}</div>\n    <div class=\"box\"><div class=\"box-h\">Spoken language</div>${barsChart(ag.spokenLanguages, N)}</div>\n    <div class=\"box\"><div class=\"box-h\">Talent</div>${barsChart(ag.talent, N)}</div>\n  </div>\n  <div class=\"box\"><div class=\"box-h\">Evidence grid — which ads use which lever ${tag('observed')}</div>\n    <table class=\"matrix\"><thead><tr><th></th>${flagKeys.map((k) => `<th><span>${FLAG_SHORT[k]}</span></th>`).join('')}</tr></thead>\n    <tbody>${ads.map((a) => `<tr><td class=\"mono\">#${a.rank}</td>${flagKeys.map((k) => `<td>${A(a).flags[k] ? '<i class=\"on\"></i>' : '<i></i>'}</td>`).join('')}</tr>`).join('')}\n    <tr class=\"tot\"><td>Total</td>${flagKeys.map((k) => `<td class=\"mono\">${ag.flags[k] || 0}</td>`).join('')}</tr></tbody></table>\n  </div>\n</section>`;\n\nconst gapsPage = `\n<section class=\"page\">\n  ${runhead('09 Gaps')}\n  ${section('09', 'Competitive gaps', 'What nobody in this sample is doing', 'Each gap starts from a count in the evidence grid, not from opinion.')}\n  ${st.gaps.map((g, i) => `<div class=\"gap\"><div class=\"gap-n mono\">${String(i + 1).padStart(2, '0')}</div><div><h3>${esc(g.title)}</h3><p class=\"ev-line\">${esc(g.evidence)}</p>${g.whyItMatters ? `<p class=\"small\"><b>Why it matters.</b> ${esc(g.whyItMatters)}</p>` : ''}${g.opportunity ? `<p class=\"small opp\"><b>Opportunity.</b> ${esc(g.opportunity)}</p>` : ''}</div></div>`).join('')}\n</section>`;\n\nconst concepts = `\n<section class=\"page flow-page\">\n  ${runhead('10 New concepts')}\n  ${section('10', 'Three new ad concepts', 'Built on the gaps, not on the competitor\\'s ads', '')}\n  ${st.concepts.map((c, i) => `<article class=\"concept\">\n    <div class=\"concept-h\"><span class=\"mono kicker\">Concept ${i + 1}</span><h3>${esc(c.name)}</h3>${pill(`exploits: ${c.exploitsGap}`, 'ghost')}${pill(c.format)}</div>\n    <div class=\"grid2\">\n      <div class=\"field\"><label>Hook</label><p class=\"quote sm\">${esc(c.hook)}</p>${c.hookEnglish && c.hookEnglish !== c.hook ? `<p class=\"trans\">${esc(c.hookEnglish)}</p>` : ''}<label>Angle</label><p>${esc(c.angle)}</p></div>\n      <div class=\"field\"><label>Script</label><ol class=\"beats\">${(c.script || []).map((s) => `<li>${esc(s)}</li>`).join('')}</ol></div>\n      <div class=\"field\"><label>Caption</label><p>${esc(c.caption || c.body)}</p><label>CTA</label><p><b>${esc(c.cta)}</b></p></div>\n      <div class=\"field\"><label>Why it could work</label><p>${esc(c.whyItCouldWork)}</p><label>Measure · kill if</label><p>${esc(c.successMetric)} · <span class=\"muted\">${esc(c.killCriteria)}</span></p></div>\n    </div></article>`).join('')}\n</section>`;\n\nconst recs = `\n<section class=\"page\">\n  ${runhead('11 Recommendations')}\n  ${section('11', 'Final recommendations', 'What I would do on Monday', '')}\n  <table class=\"board recs\"><thead><tr><th>Action</th><th>Why</th><th>Effort</th><th>Impact</th></tr></thead>\n  <tbody>${st.recommendations.map((r) => `<tr><td><b>${esc(r.action)}</b></td><td>${esc(r.why)}</td><td>${pill(r.effort, 'ghost')}</td><td>${pill(r.impact, r.impact === 'High' ? 'hot' : 'ghost')}</td></tr>`).join('')}</tbody></table>\n  <div class=\"kicker\" style=\"margin-top:12mm\">12 — Disclaimer & limitations</div>\n  <div class=\"box disclaimer\">\n    <p><b>The ranking represents estimated creative effectiveness based on observable ad characteristics. It is not based on private campaign performance data.</b> The Meta Ad Library does not expose CTR, CPI, CPA, ROAS or spend for commercial ads in India.</p>\n    <ul class=\"small\">\n      <li>Sample: top ${N} active ads by Meta's ${cfg.impressionSorted ? 'impression' : esc(cfg.sortMode)} sort out of ${pf.reportedActiveAds ?? 'an unknown number of'} reported. Patterns describe this sample, not the whole account.</li>\n      <li>Creative grades come from Gemini against a fixed rubric; they are judgements and can vary slightly between runs. Weights, ranks, medians and gaps are deterministic.</li>\n      <li>Market Signal uses public behaviour (sort order, run length, placements, clones) as a proxy for advertiser confidence. It can be wrong for new ads or ads paused for reasons unrelated to results.</li>\n      <li>Dynamic Creative ads hold several variants; the first video variant was analysed. Creative URLs from Meta expire after a few days, so thumbnails in older copies of this report may not load.</li>\n      ${d.unscored.length ? `<li>Not scored: ${d.unscored.map((u) => `${esc(u.adId)} (${esc(short(u.reason, 60))})`).join('; ')}.</li>` : ''}\n      <li>Strategist memo source: ${esc(d.strategySource)}. Generated ${esc(generated)}.</li>\n    </ul>\n  </div>\n</section>`;\n\nconst CSS = `\n@page{size:A4;margin:12mm 0}\n@page:first{margin:0}\n:root{--ink:#121417;--ink2:#33383F;--muted:#6B7280;--line:#E4E6EA;--soft:#F5F6F8;--accent:#E4572E;--accentSoft:#FBE9E3}\n*{box-sizing:border-box}\nhtml,body{margin:0;background:#fff;color:var(--ink);font-family:'IBM Plex Sans','Noto Sans Tamil','Noto Sans Kannada','Noto Sans Devanagari','Noto Sans Telugu','Noto Sans Bengali','Noto Sans Malayalam',sans-serif;font-size:9.2pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n.page{width:210mm;padding:0 15mm;page-break-after:always;break-after:page}\n.cover{height:297mm;padding:18mm 16mm;display:flex;flex-direction:column}\n.mono{font-family:'IBM Plex Mono',monospace}.muted{color:var(--muted)}.small{font-size:8.4pt}.strong{font-weight:600}\n.kicker{font:500 7.2pt 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5mm}\n.runhead{display:flex;justify-content:space-between;font:500 7pt 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:2mm 0 2.5mm;margin-bottom:7mm}\nh2{font-size:16pt;font-weight:600;letter-spacing:-.01em;margin:0 0 2mm;line-height:1.2}\nh3{font-size:10.5pt;font-weight:600;margin:0 0 1mm}\n.lede{color:var(--ink2);font-size:10pt;max-width:165mm;margin:0 0 6mm}\n.cv-top{display:flex;justify-content:space-between}\n.cv-mid{margin-top:46mm}\n.cv-brand{font-size:40pt;font-weight:600;letter-spacing:-.02em;line-height:1}\n.cv-title{font-size:17pt;font-weight:300;line-height:1.3;margin-top:6mm;max-width:160mm;color:var(--ink2)}\n.cv-thesis{margin-top:14mm;border-left:3px solid var(--accent);padding:1mm 0 1mm 5mm;max-width:150mm}\n.cv-thesis p{font-size:11pt;margin:1mm 0 0}\n.cv-stats{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin-top:auto;padding:5mm 0}\n.cv-stats b{display:block;font:500 20pt 'IBM Plex Mono',monospace}.cv-stats span{font-size:7.8pt;color:var(--muted)}\n.cv-foot{margin-top:6mm;display:grid;gap:1.5mm;font-size:8pt}\n.cv-foot div{display:grid;grid-template-columns:28mm 1fr}.src{word-break:break-all;font-size:7pt}\n.bullets{padding-left:4.5mm;margin:0 0 4mm}.bullets li{margin:0 0 1.6mm}.bullets.big li{font-size:10.2pt;margin-bottom:2.4mm}\n.kpis{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin:4mm 0 6mm}\n.kpis.three{grid-template-columns:repeat(3,1fr)}\n.kpis div{padding:3.5mm 3mm 3.5mm 0}.kpis span{display:block;font-size:7.6pt;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}\n.kpis b{display:block;font:500 17pt 'IBM Plex Mono',monospace;margin:1mm 0}.kpis em{font-style:normal;font-size:7.6pt;color:var(--muted)}\n.two{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:5mm}\n.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;margin:4mm 0}\n.pgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3.5mm}.pgrid .box p{font-size:7.8pt}.pgrid .ev-line{font-size:7pt}\n.box{border:1px solid var(--line);border-radius:2mm;padding:3.5mm 4mm;break-inside:avoid}\n.box-h{font-weight:600;font-size:8.6pt;margin-bottom:2mm;display:flex;gap:2mm;align-items:center}\n.kv{width:100%;border-collapse:collapse;font-size:8.2pt}.kv td{border-top:1px solid var(--line);padding:1.4mm 0;vertical-align:top}.kv td:first-child{color:var(--muted);width:42%}\n.tag{font:500 6.4pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;padding:.3mm 1.4mm;border-radius:1mm;vertical-align:1px}\n.tag-observed{background:#E8F1EC;color:#22603A}.tag-inferred{background:#F3EDE2;color:#7A5517}.tag-estimated{background:var(--accentSoft);color:#A53A18}\n.pill{display:inline-block;font-size:7.2pt;padding:.4mm 2mm;border-radius:3mm;background:var(--soft);color:var(--ink2);margin:0 1mm 1mm 0;white-space:nowrap}\n.pill.q1{background:var(--ink);color:#fff}.pill.q2{background:var(--accentSoft);color:#A53A18}.pill.q3{background:#ECEFF4;color:#334}.pill.q4{background:#fff;border:1px solid var(--line);color:var(--muted)}\n.pill.ghost{background:#fff;border:1px solid var(--line)}.pill.hot{background:var(--accent);color:#fff}\n.bar{display:inline-block;height:1.6mm;background:var(--soft);border-radius:1mm;overflow:hidden;width:100%}.bar i{display:block;height:100%;background:var(--accent)}\n.bar.thin{height:1.2mm}.bar.thin i{background:var(--ink)}\n.hbars .hb{display:grid;grid-template-columns:38% 1fr 6mm;gap:2mm;align-items:center;font-size:8pt;margin-bottom:1.3mm}\n.hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb-t{height:2.4mm;background:var(--soft);border-radius:1mm;overflow:hidden}.hb-t i{display:block;height:100%;background:var(--ink)}.hb-v{font-family:'IBM Plex Mono';text-align:right}\n.flow{display:flex;flex-wrap:wrap;align-items:center;gap:1.5mm;margin-bottom:6mm}\n.step{border:1px solid var(--line);border-radius:1.5mm;padding:1.6mm 2.4mm;font-size:7.8pt;background:var(--soft)}.step span{color:var(--accent);margin-right:1.4mm;font-size:7pt}\n.arrow{color:var(--muted);font-size:8pt}\n.weights{width:100%;border-collapse:collapse;font-size:8.2pt}.weights td{padding:1.1mm 0}.weights td:first-child{width:46%}.weights td:nth-child(2){padding:0 3mm}.weights td:last-child{text-align:right;width:10mm}\n.formula{background:var(--ink);color:#fff;padding:3.5mm 4mm;border-radius:2mm;font-size:9pt;margin-bottom:5mm}\n.best{display:grid;grid-template-columns:58mm 1fr;gap:7mm;margin-bottom:5mm}\n.best-l{display:flex;flex-direction:column;gap:2mm}\n.thumb{background:var(--soft);border-radius:2mm;overflow:hidden;aspect-ratio:9/16;width:100%}.thumb img{width:100%;height:100%;object-fit:cover;display:block}\n.thumb.tall{width:58mm}.thumb.mini{width:6mm;border-radius:1mm}.thumb.ph{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:7pt}\n.score-hero{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:3mm;margin-bottom:3mm}\n.score-hero b{display:block;font:500 34pt 'IBM Plex Mono',monospace;line-height:1;color:var(--accent)}.score-hero em{font-style:normal;font-size:8pt;color:var(--muted)}\n.score-hero .sub{display:flex;gap:5mm}.score-hero .sub span{display:block;font-size:7.4pt;color:var(--muted)}.score-hero .sub b{font-size:13pt;color:var(--ink)}\n.dims{display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm;margin-bottom:3mm}\n.dim{display:grid;grid-template-columns:24mm 1fr 5mm 7mm;gap:2mm;align-items:center;font-size:7.8pt}.dim b{font-family:'IBM Plex Mono';text-align:right}.dim em{font-style:normal;color:var(--muted);font-size:7pt;text-align:right}\n.field{margin-bottom:2.4mm}.field label{display:block;font:500 6.8pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 .8mm}\n.field p{margin:0 0 1.4mm}\n.quote{font-size:11pt;font-weight:500;border-left:2px solid var(--accent);padding-left:3mm}.quote.sm{font-size:9.2pt}\n.trans{color:var(--muted);font-style:italic;padding-left:3.5mm}\n.ev{list-style:none;padding:0;margin:0}.ev li{border-top:1px solid var(--line);padding:1.6mm 0;font-size:8.4pt}.ev li b{display:block}.ev li span{color:var(--ink2)}\n.ev-line{font:400 7.6pt 'IBM Plex Mono',monospace;color:var(--muted);margin:1mm 0 0}\n.board{width:100%;border-collapse:collapse;font-size:7.9pt}\n.board th{font:500 6.8pt 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;border-bottom:1px solid var(--ink);padding:1.4mm 1.6mm}\n.board td{border-bottom:1px solid var(--line);padding:1.2mm 1.6mm;vertical-align:top}.board .r{text-align:right}.board tr.win td{background:var(--accentSoft)}\n.board.compact td{padding:1.3mm 1.6mm}\n.scatter,.strip{width:100%;height:auto}\n.scatter .ax{stroke:var(--ink);stroke-width:.8}.scatter .med{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:.6}\n.scatter .dot{fill:#fff;stroke:var(--ink);stroke-width:1}.scatter .dot.win{fill:var(--accent);stroke:var(--accent)}\n.scatter .dl{font:500 6.5px 'IBM Plex Mono';text-anchor:middle;fill:var(--ink)}.ql{font:500 6.5px 'IBM Plex Sans';fill:var(--muted);text-transform:uppercase;letter-spacing:.06em}\n.at{font:400 6.5px 'IBM Plex Mono';fill:var(--muted)}\n.strip .grid{stroke:var(--line);stroke-width:.6}.strip .dur{stroke:#D5D8DD;stroke-width:2}.strip .prod{fill:var(--accent)}.strip .brand{fill:var(--ink)}\n.legend{display:flex;gap:4mm;font-size:7pt;color:var(--muted);margin-top:1mm}.lg{display:inline-block;width:2.4mm;height:2.4mm;margin-right:1mm;vertical-align:-1px}\n.lg.prod{background:var(--accent);border-radius:50%}.lg.brand{background:var(--ink)}.lg.dur{background:#D5D8DD;height:1mm;vertical-align:1px}\n.card{display:grid;grid-template-columns:24mm 1fr;gap:4.5mm;border-top:1px solid var(--ink);padding:3.5mm 0 2mm;break-inside:avoid}\n.card-l .thumb{width:24mm}.card-l .mono{font-size:6.2pt;margin-top:1mm}.card-h{display:flex;gap:3mm;align-items:baseline;margin-bottom:1.5mm}\n.chips{margin-bottom:2mm;font-size:7.8pt}.chips>span:not(.pill){margin-right:3.5mm}.chips b{font-family:'IBM Plex Mono'}\n.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 6mm}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 4.5mm}.span2{grid-column:span 2}.span3{grid-column:span 3}\n.field.rec p{background:var(--soft);padding:1.6mm 2.4mm;border-radius:1.4mm}\n.card .field p{font-size:7.7pt;line-height:1.38}.card .field{margin-bottom:1.6mm}.card .quote.sm{font-size:8.6pt}\n.qtag{display:inline-block;font:500 6pt 'IBM Plex Sans';text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap}.qtag.q1{color:var(--ink)}.qtag.q2{color:#A53A18}\n.matrix{border-collapse:collapse;font-size:7.6pt;width:100%}\n.matrix th{height:19mm;vertical-align:bottom;padding:0}.matrix th span{display:inline-block;transform:rotate(-55deg);transform-origin:left bottom;white-space:nowrap;margin-left:2mm;font-weight:500;font-size:7pt;color:var(--ink2)}\n.matrix td{text-align:center;border-bottom:1px solid var(--line);padding:1mm}.matrix td:first-child{text-align:left;width:12mm}\n.matrix i{display:inline-block;width:2.6mm;height:2.6mm;border-radius:50%;border:1px solid var(--line)}.matrix i.on{background:var(--ink);border-color:var(--ink)}\n.matrix tr.tot td{border-top:1px solid var(--ink);font-weight:600}\n.gap{display:grid;grid-template-columns:12mm 1fr;gap:3mm;border-top:1px solid var(--line);padding:4mm 0;break-inside:avoid}\n.gap-n{font-size:16pt;color:var(--accent)}.opp{background:var(--accentSoft);padding:1.6mm 2.4mm;border-radius:1.4mm}\n.concept{border:1px solid var(--line);border-radius:2mm;padding:4mm 4.5mm;margin-bottom:5mm;break-inside:avoid}\n.concept-h{display:flex;flex-wrap:wrap;gap:2mm;align-items:baseline;margin-bottom:2.5mm}.concept-h h3{margin:0 2mm 0 0;font-size:11.5pt}\n.beats{padding-left:4mm;margin:0;font-size:8.2pt}.beats li{margin-bottom:.8mm}\n.recs td:first-child{width:34%}\n.disclaimer p{margin:0 0 2mm}\n`;\n\nconst FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&family=Noto+Sans+Kannada&family=Noto+Sans+Malayalam&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&display=swap';\nconst html = `<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>${esc(cfg.brand)} — Ad Library Teardown</title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"${FONTS}\" rel=\"stylesheet\"><style>${CSS}</style></head>\n<body>${cover}${execSummary}${methodology}${bestAd}${scoreboard}${individual}${hooks}${ctas}${patterns}${gapsPage}${concepts}${recs}</body></html>`;\n\nconst slug = String(cfg.brand).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'advertiser';\nconst fileName = `${slug}-ad-intelligence-report-${cfg.runStartedAt.slice(0, 10)}`;\n\nreturn [{\n  json: {\n    fileName,\n    html,\n    summary: {\n      brand: cfg.brand,\n      adsScored: N,\n      winner: w ? { adId: w.adId, adStrengthIndex: w.adStrengthIndex, creativeScore: w.creativeScore, marketSignal: w.marketSignal, hook: A(w).hook, cta: A(w).cta, body: A(w).body, adLibraryUrl: w.adLibraryUrl } : null,\n      ranking: ads.map((a) => ({ rank: a.rank, adId: a.adId, index: a.adStrengthIndex, creative: a.creativeScore, market: a.marketSignal, quadrant: a.quadrant, hookType: A(a).hook.type, hook: A(a).hook.english })),\n      gaps: st.gaps.map((g) => g.title),\n      strategySource: d.strategySource,\n    },\n  },\n}];\n"
+      },
+      "id": "0d6b529c-a600-490e-811d-33cbc75a9233",
+      "name": "17 — Build Report (HTML)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "URL/HTML to PDF",
+        "convertType": "htmlToPDF",
+        "html": "={{ $json.html }}",
+        "advancedOptions": {
+          "name": "={{ $json.fileName }}.pdf",
+          "margins": "0px",
+          "mediaType": "print",
+          "paperSize": "a4",
+          "printBackground": true
+        }
+      },
+      "id": "e1987ca2-0fb4-4289-bb6b-e6c4fe9e6b75",
+      "name": "18 — Render PDF (PDF.co)",
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        160
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "redirect",
+        "redirectUrl": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "ada62372-b337-4039-8bbb-384ed50b53fd",
+      "name": "19 — Deliver PDF",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        2688,
+        112
+      ],
+      "webhookId": "130573b4-0428-4b39-85ea-841824fc97ea"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "={{ $('17 — Build Report (HTML)').first().json.html }}"
+      },
+      "id": "0425c7d4-a6ce-44fc-88b0-2386cad66c06",
+      "name": "19x — Deliver HTML (PDF fallback)",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        2688,
+        288
+      ],
+      "webhookId": "6bdeff00-1676-4885-b524-bf015a7b4b3b"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Builds the analysis brief for one ad. The prompt is identical across media\n// types except for one instruction line, so video, image and copy-only\n// analyses stay comparable on the same rubric.\nconst HOOK_TYPES = 'Pain | Curiosity | Contrarian | Question | Benefit | Fear | Social Proof | Authority | Offer | Urgency | Transformation | Comparison | Story';\nconst FORMATS = 'AI-generated story | UGC talking head | Video-call demo | App screen demo | Text-on-screen testimonial | Lesson snippet | Skit / drama | Static image | Carousel | Unknown (copy-only)';\n\nconst SCHEMA = `{\n  \"adId\": \"string\",\n  \"confidence\": \"high | medium | low\",\n  \"language\": \"language(s) actually spoken or written in the creative\",\n  \"format\": \"one of: ${FORMATS}\",\n  \"talent\": \"real people | AI-generated characters | animation | none\",\n  \"first3s\": { \"visual\": \"what is on screen in the first 3 seconds\", \"audioOrText\": \"exact words heard or shown in the first 3 seconds, original language\" },\n  \"hook\": { \"text\": \"the hook, verbatim, original language\", \"english\": \"English translation (same as text if already English)\", \"type\": \"one of: ${HOOK_TYPES}\", \"strength\": 0 },\n  \"body\": \"the core message after the hook, 1-3 sentences, observed\",\n  \"cta\": { \"spoken\": \"CTA said or shown inside the creative, or 'none'\", \"button\": \"the button label\", \"strengthNote\": \"why this CTA is strong or weak, one line\" },\n  \"headline\": \"string\",\n  \"offer\": \"observed offer, or 'none observed'\",\n  \"productFirstSeenSec\": \"number or null - second the app/product UI first appears\",\n  \"brandFirstMentionSec\": \"number or null - second the brand name is first shown or said\",\n  \"captionsBurnedIn\": \"boolean - works with sound off\",\n  \"targetAudience\": \"LIKELY audience (inference)\",\n  \"painPoint\": \"string\",\n  \"desiredOutcome\": \"string\",\n  \"valueProposition\": \"string\",\n  \"creativeAngle\": \"short label, e.g. 'Problem -> Solution', 'Aspirational story', 'Live demo'\",\n  \"emotionalTrigger\": \"string\",\n  \"awarenessLevel\": \"Unaware | Problem-aware | Solution-aware | Product-aware | Most-aware\",\n  \"funnelStage\": \"TOF | MOF | BOF\",\n  \"proofMechanism\": \"observed proof, or 'none'\",\n  \"urgencyMechanism\": \"observed urgency, or 'none'\",\n  \"visualConcept\": \"string\",\n  \"patternInterrupt\": \"what (if anything) breaks the scroll, or 'none'\",\n  \"flags\": { \"quantifiedOutcome\": false, \"socialProof\": false, \"urgency\": false, \"comparison\": false, \"objectionHandling\": false, \"beforeAfter\": false, \"customerStory\": false, \"priceShown\": false, \"productUiShown\": false, \"humanFace\": false },\n  \"scores\": { \"hookScore\": 0, \"clarityScore\": 0, \"valuePropScore\": 0, \"offerScore\": 0, \"ctaScore\": 0, \"specificityScore\": 0, \"creativeAngleScore\": 0, \"conversionIntentScore\": 0, \"productVisibility\": 0, \"textDensity\": 0 },\n  \"observed\": [\"3-6 short facts you directly saw, heard or read\"],\n  \"inferred\": [\"2-4 judgements, each starting with 'Likely' or 'Appears'\"],\n  \"whyItWorks\": \"1-2 sentences tied to a specific moment or line\",\n  \"weakness\": \"the single biggest leak, specific\",\n  \"recommendation\": \"one concrete edit worth testing\"\n}`;\n\nconst RUBRIC = `Score each 0-10 as an integer. Most real ads land between 4 and 8; give 9-10 only for something you would show a team as a reference.\n- hookScore: 9-10 = stops the scroll inside 2s AND is instantly relevant to the viewer's problem; 5-6 = clear but generic; 0-3 = slow, logo-first or confusing.\n- clarityScore: after one distracted view, could someone say what the product is and what it does?\n- valuePropScore: is the promised outcome meaningful and different from the alternatives (tutors, classes, YouTube, other apps)?\n- offerScore: is there a concrete, low-risk reason to act now (price, trial, guarantee)? 0 if no offer.\n- ctaScore: is the next step explicit, low-friction and consistent with the offer (spoken/on-screen CTA plus button)?\n- specificityScore: numbers, named situations and concrete details score high; vague claims score low.\n- creativeAngleScore: does the format feel native and fresh in the feed, or like a tired template?\n- conversionIntentScore: how directly does the creative push the viewer to act now?\n- productVisibility: how clearly and how long the product itself is shown.\n- textDensity: 0 = no on-screen text, 10 = wall of text.`;\n\nconst MEDIA_LINE = {\n  video: 'THE VIDEO IS ATTACHED. Watch all of it and listen to the audio. The hook is whatever happens in the first ~3 seconds. Use timestamps in seconds.',\n  image: 'THE IMAGE IS ATTACHED. If this is the thumbnail of a video ad (media note below), say so in \"observed\" and keep confidence at medium or lower.',\n  text: 'NO CREATIVE COULD BE RETRIEVED. Analyse the copy only, set format to \"Unknown (copy-only)\", confidence to \"low\", and do not describe visuals you cannot see.',\n};\n\nconst build = (a, mediaLine) => {\n  const meta = {\n    adId: a.adId,\n    page: a.pageName,\n    runningSince: a.startDate,\n    daysActive: a.daysActive,\n    placements: a.platforms,\n    displayFormat: a.displayFormat,\n    creativeVariantsInAd: a.variantCount,\n    mediaType: a.mediaType,\n    videoDurationSec: a.durationS,\n    headline: a.headline || '(none)',\n    primaryText: a.body || '(none)',\n    hashtags: a.hashtags,\n    ctaButton: a.cta,\n    destination: a.linkDomain,\n    captionLanguage: a.language,\n    captionSharedWithOtherAds: a.sameCopy ? `yes - ${a.copyGroupSize} ads in this sample use this exact caption` : 'no',\n    templatePlaceholdersVisibleInLibrary: a.templateLeak,\n  };\n  return [\n    'ROLE',\n    'You are a senior performance-creative strategist auditing a live Meta ad for a growth team. You are precise and skeptical, and you never invent what you cannot see or hear.',\n    '',\n    'INPUT 1 - OBSERVED METADATA (scraped from the Meta Ad Library, treat as fact):',\n    JSON.stringify(meta, null, 2),\n    '',\n    `INPUT 2 - ${mediaLine}`,\n    '',\n    'HOW TO THINK',\n    '- In Dynamic Creative accounts the caption is often shared by many ads. Treat the creative itself as the ad; the caption is secondary.',\n    '- Quote the hook verbatim in its original language, then translate it.',\n    '- OBSERVED means you saw, heard or read it. INFERRED is your judgement. Never present an inference as a fact.',\n    '- Never claim performance (CTR, installs, ROAS). You are judging observable creative quality only.',\n    '- If something is not determinable, write \"not observed\" (or null for numbers) instead of guessing.',\n    '',\n    'SCORING RUBRIC',\n    RUBRIC,\n    '',\n    'OUTPUT',\n    'Return ONLY one JSON object, no markdown fences, no commentary, matching exactly this shape:',\n    SCHEMA,\n  ].join('\\n');\n};\n\nreturn $input.all().map(({ json: a }) => {\n  const { rawData, ...ad } = a;\n  return {\n    json: {\n      ...ad,\n      route: ad.mediaType,\n      prompt: build(ad, MEDIA_LINE[ad.mediaType]),\n      promptCopyOnly: build(ad, MEDIA_LINE.text),\n    },\n  };\n});\n"
+      },
+      "id": "9cf1b145-0955-4551-acf3-97434ab2a721",
+      "name": "08 — Build Analysis Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "video"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "video"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.route }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "image"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "copy only"
+        }
+      },
+      "id": "c9981295-5b9b-4281-8e27-1a00d40b288d",
+      "name": "09 — Route by Creative Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1792,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3.5-flash-lite"
+        },
+        "text": "={{ $json.prompt }}",
+        "videoUrls": "={{ $json.videoUrl }}",
+        "options": {
+          "maxOutputTokens": 8192
+        }
+      },
+      "id": "f67761c6-387b-4d2c-bd6a-45cfbe51be0c",
+      "name": "10a — Gemini · Watch Video Ad",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        288
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gemini returns text; we need a trustworthy object. Pull every text part out\n// of the response, strip fences, parse, then clamp/normalise every field the\n// scorer depends on. Anything unusable is routed to the repair step.\nconst SOURCE_NODE = '08 — Build Analysis Brief';\nconst ATTEMPT = 'first';\n\nconst collectText = (node) => {\n  if (node == null) return '';\n  if (typeof node === 'string') return node;\n  if (Array.isArray(node)) return node.map(collectText).join('');\n  if (typeof node === 'object') {\n    if (typeof node.text === 'string') return node.text;\n    if (node.content) return collectText(node.content);\n    if (node.parts) return collectText(node.parts);\n    if (node.candidates) return collectText(node.candidates[0]);\n    if (node.message) return collectText(node.message);\n    if (node.output) return collectText(node.output);\n  }\n  return '';\n};\n\nconst parseJson = (text) => {\n  let t = String(text || '').replace(/```(?:json)?/gi, '').trim();\n  const start = t.indexOf('{');\n  const end = t.lastIndexOf('}');\n  if (start === -1 || end <= start) throw new Error('No JSON object in model output');\n  t = t.slice(start, end + 1);\n  try { return JSON.parse(t); } catch (e) {\n    return JSON.parse(t.replace(/,\\s*([}\\]])/g, '$1').replace(/[“”]/g, '\"'));\n  }\n};\n\nconst SCORE_KEYS = ['hookScore', 'clarityScore', 'valuePropScore', 'offerScore', 'ctaScore', 'specificityScore', 'creativeAngleScore', 'conversionIntentScore', 'productVisibility', 'textDensity'];\nconst FLAG_KEYS = ['quantifiedOutcome', 'socialProof', 'urgency', 'comparison', 'objectionHandling', 'beforeAfter', 'customerStory', 'priceShown', 'productUiShown', 'humanFace'];\nconst clampScore = (v) => {\n  const n = Number(v);\n  return Number.isFinite(n) ? Math.min(10, Math.max(0, Math.round(n))) : null;\n};\nconst num = (v) => (v === null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));\nconst str = (v, d = 'not observed') => (v == null || v === '' ? d : String(v).trim());\nconst list = (v) => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 8) : []);\nconst bool = (v) => v === true || v === 'true' || v === 'yes';\nconst FORMATS = ['AI-generated story', 'UGC talking head', 'Video-call demo', 'App screen demo', 'Text-on-screen testimonial', 'Lesson snippet', 'Skit / drama', 'Static image', 'Carousel', 'Unknown (copy-only)'];\nconst key4 = (x) => String(x || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 4);\nconst canonFormat = (f) => FORMATS.find((x) => key4(x) === key4(f)) || (f ? String(f).trim() : 'Other');\n\nconst normalise = (p) => {\n  const scores = {};\n  SCORE_KEYS.forEach((k) => { scores[k] = clampScore(p.scores && p.scores[k]); });\n  const flags = {};\n  FLAG_KEYS.forEach((k) => { flags[k] = bool(p.flags && p.flags[k]); });\n  const hook = p.hook || {};\n  const cta = p.cta || {};\n  return {\n    confidence: ['high', 'medium', 'low'].includes(p.confidence) ? p.confidence : 'medium',\n    language: str(p.language),\n    format: canonFormat(p.format),\n    talent: str(p.talent, 'not observed'),\n    first3s: { visual: str(p.first3s && p.first3s.visual), audioOrText: str(p.first3s && p.first3s.audioOrText) },\n    hook: { text: str(hook.text), english: str(hook.english || hook.text), type: str(hook.type, 'Other').split('|')[0].trim(), strength: clampScore(hook.strength ?? scores.hookScore) },\n    body: str(p.body),\n    cta: { spoken: str(cta.spoken, 'none'), button: str(cta.button, ''), strengthNote: str(cta.strengthNote, '') },\n    headline: str(p.headline, ''),\n    offer: str(p.offer, 'none observed'),\n    productFirstSeenSec: num(p.productFirstSeenSec),\n    brandFirstMentionSec: num(p.brandFirstMentionSec),\n    captionsBurnedIn: bool(p.captionsBurnedIn),\n    targetAudience: str(p.targetAudience), painPoint: str(p.painPoint), desiredOutcome: str(p.desiredOutcome),\n    valueProposition: str(p.valueProposition), creativeAngle: str(p.creativeAngle), emotionalTrigger: str(p.emotionalTrigger),\n    awarenessLevel: str(p.awarenessLevel), funnelStage: str(p.funnelStage),\n    proofMechanism: str(p.proofMechanism, 'none'), urgencyMechanism: str(p.urgencyMechanism, 'none'),\n    visualConcept: str(p.visualConcept), patternInterrupt: str(p.patternInterrupt, 'none'),\n    flags, scores,\n    observed: list(p.observed), inferred: list(p.inferred),\n    whyItWorks: str(p.whyItWorks, ''), weakness: str(p.weakness, ''), recommendation: str(p.recommendation, ''),\n  };\n};\n\nreturn $input.all().map((item, i) => {\n  const ad = $(SOURCE_NODE).itemMatching ? $(SOURCE_NODE).itemMatching(i).json : $(SOURCE_NODE).all()[i].json;\n  const res = item.json || {};\n  const text = collectText(res);\n  let analysis = null;\n  let aiError = null;\n  try {\n    const parsed = parseJson(text);\n    const missing = ['hook', 'scores'].filter((k) => !parsed[k]);\n    if (missing.length) throw new Error(`Missing keys: ${missing.join(', ')}`);\n    analysis = normalise(parsed);\n    if (SCORE_KEYS.slice(0, 8).filter((k) => analysis.scores[k] === null).length > 2) throw new Error('Too many missing scores');\n  } catch (e) {\n    analysis = null;\n    aiError = res.error ? (res.error.message || String(res.error)) : e.message;\n  }\n  const out = { ...ad, analysis, aiValid: !!analysis, aiError, aiAttempt: ATTEMPT };\n  if (!analysis) out.aiRaw = String(text || '').slice(0, 3000);\n  if (analysis && ATTEMPT === 'repair') out.analysisMode = 'copy-only fallback';\n  else if (analysis) out.analysisMode = ad.route === 'video' ? 'watched video' : ad.route === 'image' ? 'read image' : 'copy only';\n  return { json: out };\n});\n"
+      },
+      "id": "7b7055e2-82a0-44ef-8f66-f7890672756f",
+      "name": "11 — Validate AI JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3.5-flash-lite"
+        },
+        "text": "={{ $json.prompt }}",
+        "imageUrls": "={{ $json.imageUrl }}",
+        "options": {
+          "maxOutputTokens": 8192
+        }
+      },
+      "id": "15e306cd-5892-458f-9fff-31c705ac9f98",
+      "name": "10b — Gemini · Read Image Ad",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        464
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.2
+        }
+      },
+      "id": "56f5a83d-cb6e-4af8-b100-d97de2d91490",
+      "name": "10c — Gemini · Read Copy-Only Ad",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        640
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "dff81637-6a79-41b5-a28f-bba8d2b63dcf",
+      "name": "07 — Loop Over Ads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "No ads were found for this query.",
+        "completionMessage": "Try active_status=all, another country, or a broader keyword.",
+        "options": {}
+      },
+      "id": "ce72673d-c035-4ae1-9c58-866fa1420144",
+      "name": "06x — Reject: No Ads",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        592
+      ],
+      "webhookId": "14dee648-8220-4078-9331-c552bbfe4656"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Unable to retrieve ads. Please retry.",
+        "completionMessage": "Apify did not return data (timeout, blocked request or invalid token).",
+        "options": {}
+      },
+      "id": "570fff67-c0a1-4fa1-ba7b-2a5e4fdc13ba",
+      "name": "04x — Reject: Scraper Failed",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        768
+      ],
+      "webhookId": "896b08b3-322f-4ca0-b0a7-6b80d5543925"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Invalid Facebook Ad Library URL.",
+        "completionMessage": "={{ $json.reason }} Paste a link that starts with https://www.facebook.com/ads/library/",
+        "options": {}
+      },
+      "id": "20c345c3-52b9-4a34-aafc-d69772363e5c",
+      "name": "03x — Reject: Invalid URL",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        784
+      ],
+      "webhookId": "d7dce88b-e976-437b-a9d7-745b3090b9e1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.aiValid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2bd8a96f-0060-4195-a073-95def52ea670",
+      "name": "12 — AI JSON Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 8
+      },
+      "id": "5ead8798-2bca-4f79-a6c1-db51a6b80e81",
+      "name": "13 — Pace for Free Tier",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3152,
+        464
+      ],
+      "webhookId": "60d38d19-b791-47b3-acc5-dbcc6452230f"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=The previous attempt failed ({{ $json.aiError }}). Its raw output, possibly empty or truncated, was:\n<<<\n{{ $json.aiRaw }}\n>>>\nIf that output contains a usable analysis, repair it into valid JSON. Otherwise redo the task below from the copy only.\n\n{{ $json.promptCopyOnly }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.1
+        }
+      },
+      "id": "ae976af6-4c0c-410e-aaf5-465f2663f9ce",
+      "name": "12a — Gemini · Repair / Copy-Only Fallback",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2704,
+        608
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gemini returns text; we need a trustworthy object. Pull every text part out\n// of the response, strip fences, parse, then clamp/normalise every field the\n// scorer depends on. Anything unusable is routed to the repair step.\nconst SOURCE_NODE = '11 — Validate AI JSON';\nconst ATTEMPT = 'repair';\n\nconst collectText = (node) => {\n  if (node == null) return '';\n  if (typeof node === 'string') return node;\n  if (Array.isArray(node)) return node.map(collectText).join('');\n  if (typeof node === 'object') {\n    if (typeof node.text === 'string') return node.text;\n    if (node.content) return collectText(node.content);\n    if (node.parts) return collectText(node.parts);\n    if (node.candidates) return collectText(node.candidates[0]);\n    if (node.message) return collectText(node.message);\n    if (node.output) return collectText(node.output);\n  }\n  return '';\n};\n\nconst parseJson = (text) => {\n  let t = String(text || '').replace(/```(?:json)?/gi, '').trim();\n  const start = t.indexOf('{');\n  const end = t.lastIndexOf('}');\n  if (start === -1 || end <= start) throw new Error('No JSON object in model output');\n  t = t.slice(start, end + 1);\n  try { return JSON.parse(t); } catch (e) {\n    return JSON.parse(t.replace(/,\\s*([}\\]])/g, '$1').replace(/[“”]/g, '\"'));\n  }\n};\n\nconst SCORE_KEYS = ['hookScore', 'clarityScore', 'valuePropScore', 'offerScore', 'ctaScore', 'specificityScore', 'creativeAngleScore', 'conversionIntentScore', 'productVisibility', 'textDensity'];\nconst FLAG_KEYS = ['quantifiedOutcome', 'socialProof', 'urgency', 'comparison', 'objectionHandling', 'beforeAfter', 'customerStory', 'priceShown', 'productUiShown', 'humanFace'];\nconst clampScore = (v) => {\n  const n = Number(v);\n  return Number.isFinite(n) ? Math.min(10, Math.max(0, Math.round(n))) : null;\n};\nconst num = (v) => (v === null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));\nconst str = (v, d = 'not observed') => (v == null || v === '' ? d : String(v).trim());\nconst list = (v) => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 8) : []);\nconst bool = (v) => v === true || v === 'true' || v === 'yes';\nconst FORMATS = ['AI-generated story', 'UGC talking head', 'Video-call demo', 'App screen demo', 'Text-on-screen testimonial', 'Lesson snippet', 'Skit / drama', 'Static image', 'Carousel', 'Unknown (copy-only)'];\nconst key4 = (x) => String(x || '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 4);\nconst canonFormat = (f) => FORMATS.find((x) => key4(x) === key4(f)) || (f ? String(f).trim() : 'Other');\n\nconst normalise = (p) => {\n  const scores = {};\n  SCORE_KEYS.forEach((k) => { scores[k] = clampScore(p.scores && p.scores[k]); });\n  const flags = {};\n  FLAG_KEYS.forEach((k) => { flags[k] = bool(p.flags && p.flags[k]); });\n  const hook = p.hook || {};\n  const cta = p.cta || {};\n  return {\n    confidence: ['high', 'medium', 'low'].includes(p.confidence) ? p.confidence : 'medium',\n    language: str(p.language),\n    format: canonFormat(p.format),\n    talent: str(p.talent, 'not observed'),\n    first3s: { visual: str(p.first3s && p.first3s.visual), audioOrText: str(p.first3s && p.first3s.audioOrText) },\n    hook: { text: str(hook.text), english: str(hook.english || hook.text), type: str(hook.type, 'Other').split('|')[0].trim(), strength: clampScore(hook.strength ?? scores.hookScore) },\n    body: str(p.body),\n    cta: { spoken: str(cta.spoken, 'none'), button: str(cta.button, ''), strengthNote: str(cta.strengthNote, '') },\n    headline: str(p.headline, ''),\n    offer: str(p.offer, 'none observed'),\n    productFirstSeenSec: num(p.productFirstSeenSec),\n    brandFirstMentionSec: num(p.brandFirstMentionSec),\n    captionsBurnedIn: bool(p.captionsBurnedIn),\n    targetAudience: str(p.targetAudience), painPoint: str(p.painPoint), desiredOutcome: str(p.desiredOutcome),\n    valueProposition: str(p.valueProposition), creativeAngle: str(p.creativeAngle), emotionalTrigger: str(p.emotionalTrigger),\n    awarenessLevel: str(p.awarenessLevel), funnelStage: str(p.funnelStage),\n    proofMechanism: str(p.proofMechanism, 'none'), urgencyMechanism: str(p.urgencyMechanism, 'none'),\n    visualConcept: str(p.visualConcept), patternInterrupt: str(p.patternInterrupt, 'none'),\n    flags, scores,\n    observed: list(p.observed), inferred: list(p.inferred),\n    whyItWorks: str(p.whyItWorks, ''), weakness: str(p.weakness, ''), recommendation: str(p.recommendation, ''),\n  };\n};\n\nreturn $input.all().map((item, i) => {\n  const ad = $(SOURCE_NODE).itemMatching ? $(SOURCE_NODE).itemMatching(i).json : $(SOURCE_NODE).all()[i].json;\n  const res = item.json || {};\n  const text = collectText(res);\n  let analysis = null;\n  let aiError = null;\n  try {\n    const parsed = parseJson(text);\n    const missing = ['hook', 'scores'].filter((k) => !parsed[k]);\n    if (missing.length) throw new Error(`Missing keys: ${missing.join(', ')}`);\n    analysis = normalise(parsed);\n    if (SCORE_KEYS.slice(0, 8).filter((k) => analysis.scores[k] === null).length > 2) throw new Error('Too many missing scores');\n  } catch (e) {\n    analysis = null;\n    aiError = res.error ? (res.error.message || String(res.error)) : e.message;\n  }\n  const out = { ...ad, analysis, aiValid: !!analysis, aiError, aiAttempt: ATTEMPT };\n  if (!analysis) out.aiRaw = String(text || '').slice(0, 3000);\n  if (analysis && ATTEMPT === 'repair') out.analysisMode = 'copy-only fallback';\n  else if (analysis) out.analysisMode = ad.route === 'video' ? 'watched video' : ad.route === 'image' ? 'read image' : 'copy only';\n  return { json: out };\n});\n"
+      },
+      "id": "1926ac78-0713-4ef0-8888-a815b8aaa90f",
+      "name": "12b — Parse Repaired JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2928,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Ad Library Teardown\n**Input:** any Meta Ad Library link (form).\n**Output:** ranked creative teardown as a PDF.\n\n**Setup (all free):**\n1. Apify token → *Header Auth* credential: name `Authorization`, value `Bearer <token>`\n2. Gemini key from aistudio.google.com → *Google Gemini (PaLM) API* credential\n3. PDF.co runs on n8n free credits\n\nCost of an 8-ad run: about $0.01 of Apify credit; Gemini on the free tier.",
+        "height": 300,
+        "width": 440,
+        "color": 7
+      },
+      "id": "a1aec53b-f7ce-479d-a139-bca5c6a87b7a",
+      "name": "Sticky Note a82a0b12",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 1 · Intake & scrape\nValidates the link and keeps the sort mode (impression sort = usable rank signal). Pulls a few extra ads to survive dedupe. Every failure ends on a readable form page.",
+        "color": 5
+      },
+      "id": "2b14d501-b4d3-491c-9f84-7e3e405ef02d",
+      "name": "Sticky Note 5256d65d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 2 · Watch every ad\nCaptions repeat across Dynamic Creative ads, so Gemini watches the **video**: first-3-second hook, spoken CTA, time-to-product. JSON is validated; broken output is repaired or re-run copy-only. 6 s pacing keeps us inside Gemini free-tier limits.",
+        "color": 4
+      },
+      "id": "6bb1f66a-1e61-47c1-91e1-f2b8c5e8cac4",
+      "name": "Sticky Note 678043fc",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 3 · Decide in code, explain with AI\nCreative Score = assignment weights over Gemini sub-scores. Market Signal = impression rank + longevity + clones (observed). Index = 0.7 / 0.3. Gaps are **counted**; the strategist can only explain them.",
+        "color": 6
+      },
+      "id": "2ccf06c7-54ad-4666-a460-3b64329879fd",
+      "name": "Sticky Note 71dbc097",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $('14 — Score, Rank & Find Gaps').first().json.strategistPrompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are the growth lead writing a one-read internal memo after a competitor creative teardown. You get pre-computed scores, counts and gap candidates. Your job is interpretation, not arithmetic: never change a score, rank or count.\n\nVoice: short sentences, numbers first, specific moments over adjectives. Write the way a sharp operator talks to their team. No emojis, no exclamation marks. Never use these words: leverage, unlock, elevate, robust, seamless, delve, game-changer, cutting-edge, landscape, resonate, crucial, harness, tapestry, synergy, revolutionize, empower, dive, journey, holistic, comprehensive.\n\nHonesty rules:\n- The ranking is estimated creative effectiveness from observable characteristics. Never say an ad \"performs\" or \"converts\" best. Say \"scores highest in our framework\" or \"Meta's impression sort places it at #k\".\n- Every claim must point to evidence from the brief (an ad id, a quote, a count or a score).\n- Creative Score and Market Signal are different scales. Never compare one with the other, and never call one ad's score \"above the market\".\n- Don't describe reach or results you can't see: no \"dominates\", \"massive\", \"outperforms\", \"drives volume\", \"significantly\". Describe what the advertiser does, not how well it works.\n- Gaps must build on the GAP CANDIDATES list; you may merge or re-word them, not invent new counts.\n- New ad concepts must not rewrite an existing ad. Each one must exploit a named gap and be shootable by a small team in a week. Where the data shows regional-language or Hinglish creatives, you may write hooks in that language and add the English translation.\n\nReturn ONLY a JSON object with exactly these keys:\n{\n  \"headline\": \"one sentence, max 24 words: what this advertiser is really doing on Meta\",\n  \"executiveSummary\": [\"3-4 bullets, each containing a number from the brief\"],\n  \"winnerWhy\": [{\"point\": \"short claim\", \"evidence\": \"specific moment, quote or score\"}],\n  \"winnerSteal\": [\"2-3 things another team should copy from the winner\"],\n  \"hookTakeaway\": \"2 sentences on what the hook data says\",\n  \"ctaTakeaway\": \"2 sentences on what the CTA data says\",\n  \"patterns\": [{\"title\": \"\", \"insight\": \"\", \"evidence\": \"\"}],\n  \"gaps\": [{\"title\": \"\", \"evidence\": \"\", \"whyItMatters\": \"\", \"opportunity\": \"\"}],\n  \"concepts\": [{\"name\": \"\", \"exploitsGap\": \"\", \"format\": \"\", \"hook\": \"\", \"hookEnglish\": \"\", \"angle\": \"\", \"script\": [\"0-3s: ...\", \"3-10s: ...\", \"10-20s: ...\", \"20-25s: ...\"], \"caption\": \"\", \"cta\": \"\", \"whyItCouldWork\": \"\", \"successMetric\": \"\", \"killCriteria\": \"\"}],\n  \"recommendations\": [{\"action\": \"\", \"why\": \"\", \"effort\": \"Low|Med|High\", \"impact\": \"Low|Med|High\"}]\n}\nCounts: winnerWhy 3-5, patterns 4-5, gaps 3-5, concepts exactly 3, recommendations 4-6.\n",
+          "maxOutputTokens": 12000,
+          "temperature": 0.5
+        }
+      },
+      "id": "b033c1a1-3861-4353-90b5-f0ce2dcea563",
+      "name": "15b — Gemini · Strategist (backup model)",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "01 — Ad Library URL": {
+      "main": [
+        [
+          {
+            "node": "02 — Validate & Parse URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 — Validate & Parse URL": {
+      "main": [
+        [
+          {
+            "node": "03 — URL Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 — URL Valid?": {
+      "main": [
+        [
+          {
+            "node": "04 — Scrape Ad Library (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "03x — Reject: Invalid URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 — Scrape Ad Library (Apify)": {
+      "main": [
+        [
+          {
+            "node": "05 — Normalize, Clean & Fingerprint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04x — Reject: Scraper Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 — Normalize, Clean & Fingerprint": {
+      "main": [
+        [
+          {
+            "node": "06 — Ads Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 — Ads Found?": {
+      "main": [
+        [
+          {
+            "node": "07 — Loop Over Ads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "06x — Reject: No Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 — Score, Rank & Find Gaps": {
+      "main": [
+        [
+          {
+            "node": "15 — Gemini · Strategist Memo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 — Gemini · Strategist Memo": {
+      "main": [
+        [
+          {
+            "node": "16 — Validate Strategy JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "15b — Gemini · Strategist (backup model)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 — Validate Strategy JSON": {
+      "main": [
+        [
+          {
+            "node": "17 — Build Report (HTML)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 — Build Report (HTML)": {
+      "main": [
+        [
+          {
+            "node": "18 — Render PDF (PDF.co)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 — Render PDF (PDF.co)": {
+      "main": [
+        [
+          {
+            "node": "19 — Deliver PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "19x — Deliver HTML (PDF fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 — Build Analysis Brief": {
+      "main": [
+        [
+          {
+            "node": "09 — Route by Creative Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 — Route by Creative Type": {
+      "main": [
+        [
+          {
+            "node": "10a — Gemini · Watch Video Ad",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10b — Gemini · Read Image Ad",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10c — Gemini · Read Copy-Only Ad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10a — Gemini · Watch Video Ad": {
+      "main": [
+        [
+          {
+            "node": "11 — Validate AI JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 — Validate AI JSON": {
+      "main": [
+        [
+          {
+            "node": "12 — AI JSON Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10b — Gemini · Read Image Ad": {
+      "main": [
+        [
+          {
+            "node": "11 — Validate AI JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10c — Gemini · Read Copy-Only Ad": {
+      "main": [
+        [
+          {
+            "node": "11 — Validate AI JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 — Loop Over Ads": {
+      "main": [
+        [
+          {
+            "node": "14 — Score, Rank & Find Gaps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "08 — Build Analysis Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 — AI JSON Valid?": {
+      "main": [
+        [
+          {
+            "node": "13 — Pace for Free Tier",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12a — Gemini · Repair / Copy-Only Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 — Pace for Free Tier": {
+      "main": [
+        [
+          {
+            "node": "07 — Loop Over Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12a — Gemini · Repair / Copy-Only Fallback": {
+      "main": [
+        [
+          {
+            "node": "12b — Parse Repaired JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12b — Parse Repaired JSON": {
+      "main": [
+        [
+          {
+            "node": "13 — Pace for Free Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15b — Gemini · Strategist (backup model)": {
+      "main": [
+        [
+          {
+            "node": "16 — Validate Strategy JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [],
+  "nodeGroups": [
+    {
+      "id": "38e62450-cafa-4767-b142-65a240df90ba",
+      "name": "2 · Watch every ad (Gemini)",
+      "nodeNames": [
+        "08 — Build Analysis Brief",
+        "09 — Route by Creative Type",
+        "10a — Gemini · Watch Video Ad",
+        "10b — Gemini · Read Image Ad",
+        "10c — Gemini · Read Copy-Only Ad",
+        "11 — Validate AI JSON",
+        "12 — AI JSON Valid?",
+        "12a — Gemini · Repair / Copy-Only Fallback",
+        "12b — Parse Repaired JSON",
+        "13 — Pace for Free Tier"
+      ],
+      "description": "Gemini watches each video and returns strict JSON on a fixed rubric. Bad JSON is repaired or re-run copy-only."
+    },
+    {
+      "id": "252fe5a7-4fda-4607-a589-2a50a534d0e2",
+      "name": "1 · Intake, scrape & clean",
+      "nodeNames": [
+        "02 — Validate & Parse URL",
+        "03 — URL Valid?",
+        "03x — Reject: Invalid URL",
+        "04 — Scrape Ad Library (Apify)",
+        "04x — Reject: Scraper Failed",
+        "05 — Normalize, Clean & Fingerprint"
+      ],
+      "description": "Validate the link, scrape top ads with Apify, normalize, dedupe, fingerprint. Every failure ends on a readable form page."
+    },
+    {
+      "id": "d24be4a7-d08b-4285-825b-6036e24aed7d",
+      "name": "3 · Decide in code, explain, report",
+      "nodeNames": [
+        "14 — Score, Rank & Find Gaps",
+        "15 — Gemini · Strategist Memo",
+        "15b — Gemini · Strategist (backup model)",
+        "16 — Validate Strategy JSON",
+        "17 — Build Report (HTML)",
+        "18 — Render PDF (PDF.co)",
+        "19 — Deliver PDF",
+        "19x — Deliver HTML (PDF fallback)"
+      ],
+      "description": "Deterministic scores, rank, quadrants and counted gaps; Gemini writes the memo (backup model on failure); HTML rendered to PDF."
+    }
+  ]
+}

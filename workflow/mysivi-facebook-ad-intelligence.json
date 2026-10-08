@@ -170,7 +170,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1104,
+        1088,
         368
       ]
     },
@@ -321,7 +321,7 @@
       "typeVersion": 2,
       "position": [
         1568,
-        464
+        432
       ]
     },
     {
@@ -334,7 +334,7 @@
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
-                  "version": 1
+                  "version": 2
                 },
                 "conditions": [
                   {
@@ -343,7 +343,8 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "rightValue": "video"
+                    "rightValue": "video",
+                    "id": "4c2ae4a4-0c0c-4bbb-b2c7-1041bc944445"
                   }
                 ],
                 "combinator": "and"
@@ -357,7 +358,7 @@
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
-                  "version": 1
+                  "version": 2
                 },
                 "conditions": [
                   {
@@ -366,7 +367,8 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "rightValue": "image"
+                    "rightValue": "image",
+                    "id": "caab090b-26de-44e4-9b93-ae36badaed87"
                   }
                 ],
                 "combinator": "and"
@@ -433,8 +435,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2272,
-        464
+        2304,
+        400
       ]
     },
     {
@@ -536,8 +538,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 2.3,
       "position": [
-        1328,
-        592
+        1312,
+        752
       ],
       "webhookId": "14dee648-8220-4078-9331-c552bbfe4656"
     },
@@ -603,8 +605,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2480,
-        464
+        2496,
+        400
       ]
     },
     {
@@ -616,8 +618,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        3152,
-        464
+        3168,
+        400
       ],
       "webhookId": "60d38d19-b791-47b3-acc5-dbcc6452230f"
     },
@@ -647,8 +649,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.2,
       "position": [
-        2704,
-        608
+        2640,
+        464
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -670,8 +672,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2928,
-        608
+        2912,
+        464
       ]
     },
     {
@@ -686,8 +688,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -144,
-        -240
+        -288,
+        -416
       ]
     },
     {
@@ -707,6 +709,8 @@
     {
       "parameters": {
         "content": "### 2 · Watch every ad\nCaptions repeat across Dynamic Creative ads, so Gemini watches the **video**: first-3-second hook, spoken CTA, time-to-product. JSON is validated; broken output is repaired or re-run copy-only. 6 s pacing keeps us inside Gemini free-tier limits.",
+        "height": 224,
+        "width": 256,
         "color": 4
       },
       "id": "6bb1f66a-1e61-47c1-91e1-f2b8c5e8cac4",
@@ -715,12 +719,13 @@
       "typeVersion": 1,
       "position": [
         -208,
-        800
+        784
       ]
     },
     {
       "parameters": {
         "content": "### 3 · Decide in code, explain with AI\nCreative Score = assignment weights over Gemini sub-scores. Market Signal = impression rank + longevity + clones (observed). Index = 0.7 / 0.3. Gaps are **counted**; the strategist can only explain them.",
+        "width": 256,
         "color": 6
       },
       "id": "2ccf06c7-54ad-4666-a460-3b64329879fd",
@@ -729,7 +734,7 @@
       "typeVersion": 1,
       "position": [
         -208,
-        1008
+        1040
       ]
     },
     {
@@ -774,6 +779,7 @@
       }
     }
   ],
+  "pinData": {},
   "connections": {
     "01 — Ad Library URL": {
       "main": [
@@ -1098,11 +1104,10 @@
     "saveExecutionProgress": true,
     "saveManualExecutions": true
   },
-  "pinData": {},
+  "tags": [],
   "meta": {
     "templateCredsSetupCompleted": false
   },
-  "tags": [],
   "nodeGroups": [
     {
       "id": "38e62450-cafa-4767-b142-65a240df90ba",
